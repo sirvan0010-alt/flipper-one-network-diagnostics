@@ -21,7 +21,7 @@ Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít r
 
 Detailní rozhodnutí pro všech 45 funkcí F-01 až F-45 je v [feature matrix](feature-matrix.md); upstream změny se evidují v [upstream watch](upstream-watch.md).
 
-CI evidence (2026-11-20): [run 44746918230](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918230) passed 126 tests on Python 3.10–3.13, Ruff checks and FlipCTL app packaging/upload. [Security run 44746918286](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918286) passed pip-audit, high-severity Bandit and compilation. [CodeQL run 44746918047](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918047) completed successfully. This is desktop/CI validation only; no Flipper One hardware or live network test has been performed.
+CI evidence (2026-11-20): [Python checks run 44766875966](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766875966) passed 133 tests on Python 3.10–3.13, Ruff, app packaging and artifact upload; its native ARM64 job passed clean offline wheel installation, SQLite/CLI smoke tests and isolated imports of the bundled core. [Docs validation](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766875966) passed. [Security run 44766876007](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766876007) passed pip-audit, high-severity Bandit and compilation. [CodeQL run 44766876094](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766876094) completed successfully for Python and GitHub Actions. This is generic Linux/CI validation only; no Flipper One hardware or live network test has been performed.
 
 Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
 
@@ -32,7 +32,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | FlipCTL Python app | Prototyp implementován | `apps/network-diagnostics.fap.py` + package builder; cílový běh na Flipperu zatím neověřen |
 | Výsledkový JSON kontrakt | Implementováno v1 | `DiagnosticResult` a `Finding` |
 | Safe Mode základ | Implementováno jako policy API | Zatím není napojen na aktivní síťové kolektory |
-| SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
+| SQLite výsledky a historie | Implementováno v1 | Migrace schématu, atomické ukládání výsledků, `history`; CLI end-to-end test ukládá výsledek a načte jej znovu přes historii |
 | SQLite inventory baseline | Implementováno v2 | Pojmenované baseline, ukládání/načítání |
 | Linux interface inventory | Implementováno | Read-only `ip -j address show`; sysfs classification prevents Wi-Fi being treated as wired Ethernet; parser and mock tests |
 | Ethernet link status | Implementováno | Read-only `ethtool <interface>` with `/sys/class/net` fallback; parser and sysfs mock tests; ethtool may be absent from rootfs |
@@ -46,8 +46,8 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
 | Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
-| Linux ARM64 packaging/runtime | Ověřeno v GitHub Actions | Run [44766371339](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766371339): nativní `aarch64`, pytest/Ruff, `py3-none-any` wheel, čistá offline instalace, SQLite/CLI, sestavení FlipCTL balíčku a import všech zabalených modulů bez site-packages. Jde o obecný Ubuntu ARM64, nikoli Flipper OS nebo fyzické zařízení. |
-| Markdown dokumentace | Ověřeno v GitHub Actions | Run [44766371339](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766371339): interní Markdown cesty, obrázky a fragmenty nadpisů; kontrola běží offline a ignoruje fenced code blocks. Externí URL se nekontrolují. |
+| Linux ARM64 packaging/runtime | Ověřeno v GitHub Actions | Run [44766875966](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766875966): nativní `aarch64`, pytest/Ruff, `py3-none-any` wheel, čistá offline instalace bez `--no-deps`, SQLite/CLI, sestavení FlipCTL balíčku a import všech zabalených modulů bez site-packages. Jde o obecný Ubuntu ARM64, nikoli Flipper OS nebo fyzické zařízení. |
+| Markdown dokumentace | Ověřeno v GitHub Actions | Run [44766875966](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766875966): interní Markdown cesty, obrázky a fragmenty nadpisů; kontrola běží offline a ignoruje fenced code blocks. Externí URL se nekontrolují. |
 
 ### Co je potřeba před označením M3 za dokončený
 
