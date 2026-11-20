@@ -216,6 +216,17 @@ def test_local_check_panel_is_labelled_as_non_active(monkeypatch):
             interface="end0",
             data={
                 "active_probes": False,
+                "assessment": {
+                    "summary": "Local configuration needs attention.",
+                    "likely_causes": [
+                        {
+                            "title": "Possible address configuration issue",
+                            "confidence": "low",
+                            "detail": "The interface has no address.",
+                            "recommendation": "Check DHCP or static settings.",
+                        }
+                    ],
+                },
                 "component_status": {
                     "interfaces": "ok",
                     "link": "ok",
@@ -233,5 +244,9 @@ def test_local_check_panel_is_labelled_as_non_active(monkeypatch):
     assert any(row.get("label") == "Link" and row.get("value") == "ok" for row in rows)
     assert any(
         "no DHCP, DNS or gateway probes" in row.get("value", "")
+        for row in rows
+    )
+    assert any(
+        "Local configuration needs attention." in row.get("value", "")
         for row in rows
     )
