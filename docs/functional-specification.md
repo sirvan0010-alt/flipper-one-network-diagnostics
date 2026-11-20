@@ -303,11 +303,11 @@ Suggested implementation order: core policy/data model → passive wired evidenc
 
 ## 13. Current implementation and verification baseline
 
-As of 2026-11-20, last verified project commit: 8d63a3d62862eca32e2d03c3f5f75f993291cf13.
+As of 2026-11-20, last verified project commit: 89513104034067bbe6f2c0917ef33a6c063badd4.
 
-- [Python checks 44771202433](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44771202433): 137 tests, Python 3.10–3.13, Ruff, package build, native Ubuntu ARM64 validation, Debian Trixie ARM64 container, docs validation and app startup with a test FlipCTL stub.
-- [Python security 44771202422](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44771202422): pip-audit, Bandit high-severity and compilation checks.
-- [CodeQL 44771202629](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44771202629): Python and GitHub Actions analysis.
+- [Python checks 44806571846](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44806571846): 137 tests, Python 3.10–3.13, Ruff, package build, native Ubuntu ARM64 validation, Debian Trixie ARM64 container, docs validation and app startup with a test FlipCTL stub.
+- [Python security 44806572329](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44806572329): pip-audit, Bandit high-severity and compilation checks.
+- [CodeQL 44806571304](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44806571304): Python and GitHub Actions analysis.
 
 These validate code, packaging, simulated FlipCTL startup and Linux ARM64 userspace/container behavior. They do **not** validate a physical Flipper One, actual FlipCTL runtime/UI, Ethernet PHY, Wi-Fi/BT radio, Proxmark5 transport or a live network. Those remain hardware verification tasks.
 
