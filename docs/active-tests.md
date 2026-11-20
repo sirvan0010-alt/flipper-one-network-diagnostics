@@ -10,6 +10,7 @@ Status: a single-target ICMP collector is implemented for development/CLI testin
 - The target must be inside the scope and must also be present in the explicit authorization target list.
 - The authorization is per invocation; it is not saved as a persistent permission.
 - The CLI sends only one bounded ICMP test to one IP address: 1–5 requests, 1–5 seconds per request, no automatic retries, no hostname resolution and no subnet scanning.
+- A separate TCP Connect command may attempt one TCP handshake to one explicitly authorized port (1–65535) on one authorized IP; it sends no application payload and has a 1–5 second timeout.
 
 Example syntax (documentation only; the reserved TEST-NET address below is not a real target):
 
@@ -24,6 +25,20 @@ flipper-diag ping \
 ```
 
 Do not execute this against a network unless you own it or have explicit permission from its operator. The scope flag is a technical boundary, not proof of legal authorization.
+
+## TCP Connect example
+
+```bash
+flipper-diag tcp-connect \\
+  --target 192.0.2.1 \\
+  --port 443 \\
+  --scope 192.0.2.1/32 \\
+  --confirm-active \\
+  --timeout 3 \\
+  --json
+```
+
+The port must be included in the explicit authorization object. A successful handshake does not validate the application protocol; a refusal is not proof that the host is down.
 
 ## Current limitations
 
