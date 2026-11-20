@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, arm64-runtime-validation]
   pull_request:
-    branches: [main]
+    branches: [main, pre-device-foundation]
   workflow_dispatch:
   schedule:
     - cron: "23 4 * * 1"
