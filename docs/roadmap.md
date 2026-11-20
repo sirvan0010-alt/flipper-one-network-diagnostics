@@ -46,7 +46,8 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
 | Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
-| Linux ARM64 packaging/runtime | Přidán CI test | Nativní ARM64 runner, clean offline wheel install, SQLite/CLI smoke test a app bundle; čeká na první úspěšný Actions run. Není to test Flipper OS ani fyzického zařízení. |
+| Linux ARM64 packaging/runtime | Ověřeno v GitHub Actions | Run [44766371339](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766371339): nativní `aarch64`, pytest/Ruff, `py3-none-any` wheel, čistá offline instalace, SQLite/CLI, sestavení FlipCTL balíčku a import všech zabalených modulů bez site-packages. Jde o obecný Ubuntu ARM64, nikoli Flipper OS nebo fyzické zařízení. |
+| Markdown dokumentace | Ověřeno v GitHub Actions | Run [44766371339](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44766371339): interní Markdown cesty, obrázky a fragmenty nadpisů; kontrola běží offline a ignoruje fenced code blocks. Externí URL se nekontrolují. |
 
 ### Co je potřeba před označením M3 za dokončený
 
