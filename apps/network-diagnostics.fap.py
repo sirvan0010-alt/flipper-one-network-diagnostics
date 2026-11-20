@@ -18,6 +18,7 @@ from flipper_diag.linux_dns import collect_dns_config
 from flipper_diag.linux_ethtool import collect_link_status
 from flipper_diag.linux_ip import collect_ip_interfaces
 from flipper_diag.linux_routes import collect_default_routes
+from flipper_diag.local_check import collect_local_check
 from flipper_diag.store import (
     default_database_path,
     list_results,
@@ -125,6 +126,34 @@ def refresh_link(interface: str):
     return result
 
 
+def show_local_check():
+    """Show combined local-only readiness results; no network probes are sent."""
+    result = collect_local_check()
+    saved = persist(result)
+    statuses = result.data.get("component_status", {})
+    rows = [flipctl.heading("Local Check", result.status.upper())]
+    rows.append(flipctl.rule())
+    rows.append(flipctl.pair("Ethernet", statuses.get("interfaces", "unknown")))
+    rows.append(flipctl.pair("Link", statuses.get("link", "unknown")))
+    rows.append(flipctl.pair("Default route", statuses.get("routes", "unknown")))
+    rows.append(flipctl.pair("DNS config", statuses.get("dns", "unknown")))
+    if result.interface:
+        rows.append(flipctl.pair("Interface", result.interface))
+    for finding in result.findings:
+        rows.append(flipctl.rule())
+        rows.append(flipctl.text(f"{finding.severity.upper()}: {finding.title}"))
+        if finding.detail:
+            rows.extend(flipctl.text(line, dim=True) for line in flipctl.wrap(finding.detail))
+        if finding.recommendation:
+            rows.extend(flipctl.text(line, dim=True) for line in flipctl.wrap(finding.recommendation))
+    rows.append(flipctl.rule())
+    rows.append(flipctl.text("Local configuration only; no DHCP, DNS or gateway probes.", dim=True))
+    rows.append(flipctl.pair("Saved", saved, dim=True))
+    state["detail_rows"] = rows
+    state["detail_refresh"] = show_local_check
+    detail.show()
+
+
 def show_routes():
     """Show local IPv4 and IPv6 default routes without probing gateways."""
     result = collect_default_routes()
@@ -203,6 +232,7 @@ def menu_items():
     return [
         flipctl.item("Interfaces", status=f"{count} found"),
         flipctl.item("Ethernet link", status=f"{ethernet_count} ports"),
+        flipctl.item("Local Check", status="No probes"),
         flipctl.item("Default route", status="IPv4 / IPv6"),
         flipctl.item("DNS config", status="Local"),
         flipctl.item("History", status="Local"),
@@ -268,14 +298,16 @@ def open_selected(menu):
             link_menu.selected = 0
             link_menu.show()
         elif selected == 2:
-            show_routes()
+            show_local_check()
         elif selected == 3:
-            show_dns()
+            show_routes()
         elif selected == 4:
-            show_history()
+            show_dns()
         elif selected == 5:
-            show_safe_mode()
+            show_history()
         elif selected == 6:
+            show_safe_mode()
+        elif selected == 7:
             show_about()
     elif menu is link_menu:
         ports = ethernet_interfaces()
