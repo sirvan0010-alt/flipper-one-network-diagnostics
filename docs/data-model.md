@@ -47,7 +47,7 @@ Findings are deleted only when their parent run is deleted (foreign-key cascade)
 | created_at | ISO-8601 UTC timestamp |
 | inventory_json | Complete observed device inventory |
 
-The current API and CLI can save, load, list and compare named baselines. Comparison logic is pure and offline: it identifies new/missing devices, address changes and duplicate IP observations. MAC addresses are used as identity; devices without a usable MAC are rejected rather than silently matched by a potentially unstable IP.
+The current API and CLI can save, load, list and compare named baselines. Comparison logic is pure and offline: it identifies new/missing devices, address changes and duplicate IP observations. MAC addresses are used as the current identity key; devices without a usable MAC are rejected rather than silently matched by a potentially unstable IP. MAC randomization, spoofing, virtual interfaces and multi-homing can still cause false new/missing-device findings. A duplicate IP in a snapshot is therefore a warning requiring confirmation, not proof of an address conflict.
 
 CLI input is a JSON array of observed devices, each with a `mac_address` and an `addresses` array. Example:
 
