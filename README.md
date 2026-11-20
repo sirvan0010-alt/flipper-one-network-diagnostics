@@ -32,6 +32,8 @@ flipper-diag interfaces --json
 flipper-diag routes --json
 flipper-diag dns --json
 flipper-diag local-check --json
+# Active test: one explicitly authorized IP, per-command confirmation required
+flipper-diag ping --target 192.0.2.1 --scope 192.0.2.1/32 --confirm-active --json
 flipper-diag interfaces
 flipper-diag link eth0
 flipper-diag baseline save --name office --input inventory.json
@@ -49,6 +51,7 @@ flipper-diag history --json
 - [Feature matrix](docs/feature-matrix.md) – rozhodnutí pro všech 45 plánovaných funkcí: reuse, integrace, vlastní vývoj nebo odklad.
 - [Architecture](docs/architecture.md) – oddělení jádra, kolektorů, úložiště, API a prezentace.
 - [Data model](docs/data-model.md) – lokální SQLite a verzování schématu.
+- [Active test authorization](docs/active-tests.md) – Safe Mode, limity a explicitní autorizace.
 - [Verification register](docs/verification.md) – evidence skutečných hardwarových testů a první instalační smoke test po doručení zařízení.
 - [Roadmap](docs/roadmap.md) – milníky M0–M7.
 - [AGENTS.md](AGENTS.md) – úplný backlog F-01 až F-45 a závazná pravidla.
