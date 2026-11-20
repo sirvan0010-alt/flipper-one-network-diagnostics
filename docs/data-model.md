@@ -1,6 +1,6 @@
 # Local data model
 
-Status: initial implementation, schema version 1.
+Status: initial implementation, schema version 2.
 
 ## Storage goals
 
@@ -38,9 +38,20 @@ Status: initial implementation, schema version 1.
 
 Findings are deleted only when their parent run is deleted (foreign-key cascade). No deletion UI is implemented yet.
 
+### inventory_baselines (schema v2)
+
+| Column | Meaning |
+|---|---|
+| baseline_id | Locally generated UUID |
+| name | Unique operator-defined baseline name |
+| created_at | ISO-8601 UTC timestamp |
+| inventory_json | Complete observed device inventory |
+
+The current API can save, load and list named baselines. Comparison logic is pure and offline: it identifies new/missing devices, address changes and duplicate IP observations. MAC addresses are used as identity; devices without a usable MAC are rejected rather than silently matched by a potentially unstable IP.
+
 ## Migration policy
 
-SQLite `PRAGMA user_version` tracks the schema version. New migrations must be sequential and tested against:
+SQLite `PRAGMA user_version` tracks the schema version. Version 2 adds `inventory_baselines` without rewriting existing diagnostic runs. New migrations must be sequential and tested against:
 1. an empty database;
 2. a database at the immediately previous schema version;
 3. a database with a newer version (must fail closed, never downgrade or rewrite).
@@ -52,6 +63,9 @@ Schema changes must preserve old results. The full result JSON remains the archi
 - `initialize_database(path)`
 - `save_result(path, result)`
 - `list_results(path, limit=50)`
+- `save_baseline(path, name, devices)`
+- `load_baseline(path, name)`
+- `list_baselines(path)`
 - `default_database_path()`
 
 The `flipper-diag history` command reads recent results. It initializes an empty database if needed but does not run any network tests.
