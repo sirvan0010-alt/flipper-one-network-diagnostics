@@ -81,3 +81,5 @@ The system-shell check for `flipctl` is intentionally not prescribed: the Python
 
 
 | V-23 | Active confirmation flow | Open Ping wired gateway, then Cancel; verify no packets. On an authorized lab network only, repeat and press Confirm. Test one preset TCP port the same way. | Cancel sends zero packets; Confirm sends only 3 ICMP requests or one TCP handshake to the displayed wired gateway/selected port; no retry or scan | [neověřeno] |
+
+| V-24 | Passive neighbor cache | Compare Known devices with `ip -j neigh show` and `ip -6 -j neigh show`; capture interface traffic while refreshing | The list reflects only cached entries; refreshing it sends no ARP/NDP discovery packets |
