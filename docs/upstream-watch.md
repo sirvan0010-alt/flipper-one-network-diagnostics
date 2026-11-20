@@ -38,9 +38,9 @@ This register prevents duplicate implementation and tracks official changes that
 1. The official Features page explicitly documents Ethernet MitM sniffer and passive/active LAN discovery. These are product/user-story specifications; implementation and release status still need confirmation.
 2. The Flipper OS page lists a Network sniffer OS profile.
 3. FlipCTL is intended to provide app wrappers and several frontends, including built-in Flipper One display, web, TUI and desktop.
-4. The public `flipperdevices/flipctl` repository's default branch is `dev`. Its README is an architectural overview; the repository has open architecture proposal PRs. We did not find a stable versioned third-party plugin contract in the reviewed public material.
+4. The public `flipperdevices/flipctl` repository's default branch is `dev` (latest visible commit `3285ba6caf`, 2026-06-19). Its README describes a backend, HTML/JavaScript frontend, headless WebKit renderer on DRM, app wrappers and multiple control interfaces. It explicitly invites architecture and plugin-system proposals. Open PRs include the web/TUI/plugin-system prototype and architecture proposals; we did not find a stable versioned third-party plugin contract. The README describes the linked Fake FLipCTL2 as a rough AI-made prototype needing rework, not a production runtime.
 5. `fake-flipctl2` in `flipperone-testing` is a test UI harness, not the production FlipCTL implementation or a complete Flipper One emulator.
-6. Official Flipper One developer docs expose open tasks across subprojects. Before proposing upstream work, read the task, comments, contribution guide, and existing PRs; only contribute with concrete evidence.
+6. The official Open Tasks page was refreshed at `flipperone-docs` commit `59b8688dfe` (2026-11-20 01:19 UTC). It currently lists no open `help wanted` tasks in the Testing sub-project; the User Interface sub-project does list an Nmap wrapper UI task (#15). Do not submit a contribution without first reading the live issue and its comments.\n7. The Flipper Network testing documentation now explicitly groups Wi-Fi access-point, client, concurrency and dual-band test modes; Ethernet, Bluetooth, cellular and satellite tests are separate areas. This is a testing plan/category, not proof every mode is shipped or supported by the production image.
 
 Sources:
 - https://docs.flipper.net/one/general/features
@@ -48,7 +48,7 @@ Sources:
 - https://docs.flipper.net/one/cpu-software/flipctl
 - https://github.com/flipperdevices/flipctl
 - https://github.com/flipperdevices/flipctl/pulls
-- https://github.com/flipperdevices/flipperone-testing/tree/dev/fake-flipctl2
+- https://github.com/flipperdevices/flipperone-testing/tree/dev/fake-flipctl2\n- https://docs.flipper.net/one/testing/network\n- https://github.com/flipperdevices/flipperone-ui/issues/15\n- https://github.com/flipperdevices/flipperone-linux-build-scripts/commit/836f7e7f89
 - https://docs.flipper.net/one/dev-log/10
 - https://docs.flipper.net/one/how-to-join
 
