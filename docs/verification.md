@@ -78,3 +78,6 @@ free -h
 ```
 
 The system-shell check for `flipctl` is intentionally not prescribed: the Python Runtime supplies its own FlipCTL module path when it launches a `.fap.py` app. Validate that API through the actual FlipCTL launcher, not by assuming a global Python import.
+
+
+| V-23 | Active confirmation flow | Open Ping wired gateway, then Cancel; verify no packets. On an authorized lab network only, repeat and press Confirm. Test one preset TCP port the same way. | Cancel sends zero packets; Confirm sends only 3 ICMP requests or one TCP handshake to the displayed wired gateway/selected port; no retry or scan | [neověřeno] |
