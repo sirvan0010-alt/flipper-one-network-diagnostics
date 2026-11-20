@@ -23,6 +23,7 @@ def test_local_check_combines_read_only_components(monkeypatch):
                     {
                         "name": "end0",
                         "link_type": "ether",
+                        "wireless": False,
                         "operstate": "UP",
                         "addresses": [{"family": "inet", "local": "192.0.2.10"}],
                     }
@@ -199,6 +200,7 @@ def test_local_check_flags_default_route_on_another_interface(monkeypatch):
                     {
                         "name": "wlan0",
                         "link_type": "ether",
+                        "wireless": True,
                         "operstate": "UP",
                         "addresses": [{"family": "inet", "local": "198.51.100.10"}],
                     },
