@@ -8,12 +8,13 @@ Stav: workflow soubory jsou přidány do vývojové větve. Python CI, CodeQL i 
 |---|---|---|
 | `Python checks` – x86_64 | push na `main`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | Ubuntu 24.04 x64; testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
 | `Python checks` – ARM64 | stejné události | Ubuntu 24.04 ARM64; nativní testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages |
+| `Debian Trixie runtime` – ARM64 | stejné události | Debian Trixie ARM64 kontejner; kontrola `python3`, `sqlite3`, inicializace databáze a importu FlipCTL balíčku bez site-packages |
 | `CodeQL security analysis` | push na `main`/`pre-device-foundation`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | Statická analýza Pythonu a GitHub Actions, sada `security-extended` |
 | `Python security checks` | push na `main`/`pre-device-foundation`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | `pip-audit`, Bandit pro nálezy vysoké závažnosti a kontrola kompilovatelnosti |
 
 ARM64 job používá nativní GitHub-hosted runner `ubuntu-24.04-arm`, nikoli emulaci QEMU. Protože je repozitář veřejný, tento standardní runner je podle GitHubu dostupný pro veřejné projekty. Job ověřuje `aarch64`, spouští testy na ARM64, sestaví `py3-none-any` wheel, nainstaluje jej do čistého virtuálního prostředí bez indexu balíčků a provede read-only CLI/SQLite smoke test. Nakonec sestaví skutečný app adresář a importuje všechny jeho moduly v režimu Python `-S`, bez přístupu k vývojovému checkoutu a site-packages.
 
-**Hranice důkazu:** úspěšný ARM64 CI job prokazuje běh na obecném Linuxu ARM64. Neprokazuje kompatibilitu s konkrétním Flipper OS image, jeho Python Runtime, ovladači, oprávněními ani fyzickým zařízením. To zůstává samostatným testem na cílovém hardware.
+**Hranice důkazu:** Ubuntu ARM64 a Debian Trixie ARM64 kontejner prokazují běh na obecném Linuxu a blízkém Debian userspace. Debian Trixie kontejner ověřil `sqlite3` (SQLite 3.46.1), ale neprokazuje kompatibilitu s konkrétním Flipper OS image, jeho konfigurací, Python Runtime, ovladači, oprávněními ani fyzickým zařízením. To zůstává samostatným testem na cílovém hardware.
 
 Všechny workflow mají explicitní minimální oprávnění `GITHUB_TOKEN`, časový limit a omezení souběžných běhů. Použité GitHub Actions jsou připnuté na konkrétní plné commit SHA; Dependabot kontroluje jejich aktualizace.
 
