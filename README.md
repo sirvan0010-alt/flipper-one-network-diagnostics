@@ -15,6 +15,7 @@ Před jakoukoli změnou kódu nebo technickým tvrzením si přečti celý [AGEN
 - Read-only inventář rozhraní přes `iproute2` a stav Ethernet linky přes `ethtool`.
 - Lokální historie výsledků v SQLite a pojmenované inventory baseline.
 - První pravidla pro nové/chybějící zařízení, změny IP a duplicitní IP.
+- Offline CLI pro ukládání a porovnávání inventářů proti pojmenované baseline.
 - Verzovaný datový model výsledků diagnostiky.
 - Základní default-deny politika pro aktivní operace.
 - Automatické testy pro výchozí bezpečnostní chování a read-only inventuru.
@@ -28,6 +29,8 @@ flipper-diag doctor
 flipper-diag doctor --json
 flipper-diag interfaces
 flipper-diag link eth0
+flipper-diag baseline save --name office --input inventory.json
+flipper-diag baseline compare --name office --input current-inventory.json
 flipper-diag history
 flipper-diag history --json
 ```
