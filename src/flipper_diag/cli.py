@@ -6,6 +6,7 @@ from pathlib import Path
 
 from . import __version__
 from .doctor import collect_doctor_report
+from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
 from .store import default_database_path, list_results, save_result
 
@@ -26,6 +27,16 @@ def main() -> None:
     interfaces.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     interfaces.add_argument("--no-save", action="store_true", help="do not store this result")
     interfaces.add_argument(
+        "--db", type=Path, default=default_database_path(), help="SQLite database path"
+    )
+
+    link = subparsers.add_parser(
+        "link", help="read Ethernet link speed, duplex and carrier state"
+    )
+    link.add_argument("interface", help="local interface name, for example eth0")
+    link.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    link.add_argument("--no-save", action="store_true", help="do not store this result")
+    link.add_argument(
         "--db", type=Path, default=default_database_path(), help="SQLite database path"
     )
 
@@ -73,6 +84,24 @@ def main() -> None:
                     f"{interface['name']:12} {interface.get('operstate') or '-':8} "
                     f"{interface.get('mac_address') or '-':18} {addresses}"
                 )
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
+    elif args.command == "link":
+        result = collect_link_status(args.interface)
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"Ethernet link · {args.interface} · status: {result.status}")
+            for key, value in result.data.items():
+                print(f"{key}: {value}")
+            for finding in result.findings:
+                print(f"{finding.severity}: {finding.title} — {finding.detail}")
             if run_id:
                 print(f"Saved run: {run_id}")
             for note in result.limitations:
