@@ -1,6 +1,8 @@
 import json
 import sys
 
+import pytest
+
 from flipper_diag import cli
 from flipper_diag.models import DiagnosticResult
 
@@ -188,3 +190,52 @@ def test_local_check_command_saves_read_only_aggregate(tmp_path, monkeypatch, ca
     assert output["data"]["active_probes"] is False
     assert output["run_id"]
     assert database.exists()
+
+
+def test_ping_cli_requires_explicit_confirmation(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "ping", "--target", "192.0.2.1",
+            "--scope", "192.0.2.1/32", "--db", str(tmp_path / "ping.sqlite3"),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        cli.main()
+
+
+def test_ping_cli_passes_single_target_authorization(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "ping.sqlite3"
+    calls = []
+
+    def fake_ping(target, **kwargs):
+        calls.append((target, kwargs))
+        return DiagnosticResult(
+            collector="linux.ping",
+            status="ok",
+            data={"target": target, "packets_received": 3},
+        )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "ping", "--target", "192.0.2.1",
+            "--scope", "192.0.2.0/24", "--confirm-active",
+            "--count", "2", "--timeout", "1", "--db", str(database), "--json",
+        ],
+    )
+    monkeypatch.setattr(cli, "run_ping", fake_ping)
+    monkeypatch.setattr(cli, "save_result", lambda *args: "ping-run-id")
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    target, kwargs = calls[0]
+    assert target == "192.0.2.1"
+    assert kwargs["safe_mode"] is False
+    assert kwargs["authorization"].targets == ("192.0.2.1",)
+    assert kwargs["authorization"].scope == "192.0.2.0/24"
+    assert kwargs["count"] == 2
+    assert output["run_id"] == "ping-run-id"
