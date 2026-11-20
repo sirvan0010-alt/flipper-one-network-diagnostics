@@ -25,7 +25,7 @@ A feature appearing in product documentation, a source tree or an App Manager ca
 | F-09 | HTTP / FTP response time | Standard protocols/tools exist; no integrated test workflow confirmed | **Build** bounded timing checks and result normalization |
 | F-10 | Wired Discovery | Official Flipper product docs describe LAN discovery | **Integrate** native inventory and enrich/persist; avoid competing scanner |
 | F-11 | Layered LAN discovery | Official product docs describe passive and active discovery | **Reuse/integrate** native discovery; our app controls authorization and presents stages |
-| F-12 | Problem engine | No complete equivalent confirmed | **Build** deterministic findings, causes, confidence and remediation |
+| F-12 | Problem engine | No complete equivalent confirmed | **Partially implemented:** evidence-bounded Local Check assessment with explicit uncertainty; **build next:** cross-layer and active-test correlations |
 | F-13 | Path Analysis | FlipCTL exposes traceroute wrapper concept; SNMP/LLDP correlation is separate | **Reuse** traceroute; **build** L2/L3 correlation and interpretation |
 | F-14 | Topology map | Native discovery may supply nodes/links; no complete local diagnostic graph confirmed | **Build** graph from verified LLDP/SNMP observations |
 | F-15 | Packet capture 1G | Flipper OS documents a Network Sniffer profile; tcpdump is in the reviewed rootfs manifest | **Reuse/integrate** native capture and PCAP; add filters, summaries and links to findings |
@@ -69,7 +69,7 @@ The first implementation slice is intentionally passive and local:
 - link: read-only ethtool link data, if available.
 - routes: local IPv4/IPv6 default-route inventory.
 - dns: local resolver-file parsing; no DNS query.
-- local-check: aggregate local-only interface/link/route/DNS configuration; explicitly not a reachability test.
+- local-check: aggregate local-only interface/link/DNS configuration and provide an evidence-bounded assessment; explicitly not a reachability test.
 - SQLite history and named inventory baselines.
 
 Interface inventory uses /sys/class/net/<interface>/wireless to distinguish Wi-Fi devices from wired Ethernet; unknown media are not silently treated as wired. These are building blocks, not a complete AutoTest. No DHCP exchange, DNS resolution, gateway ping, TCP probe, active discovery, packet injection or port scan is run by these commands.
