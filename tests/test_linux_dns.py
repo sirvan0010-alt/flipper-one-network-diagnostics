@@ -50,6 +50,6 @@ def test_collector_handles_missing_file(tmp_path):
 
 def test_last_search_or_domain_directive_replaces_previous_list():
     parsed = linux_dns.parse_resolv_conf(
-        "search first.example second.example\\ndomain final.example\\n"
+        "search first.example second.example\ndomain final.example\n"
     )
     assert parsed["search"] == ["final.example"]
