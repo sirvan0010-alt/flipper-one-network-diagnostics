@@ -1,7 +1,7 @@
 import enum
-from pathlib import Path
 import sys
 import types
+from pathlib import Path
 
 from flipper_diag.models import DiagnosticResult
 
