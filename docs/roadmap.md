@@ -1,6 +1,6 @@
 # Roadmap
 
-Podrobný backlog F-01 až F-45 a závazné podmínky jsou v kořenovém [AGENTS.md](../AGENTS.md). Tento soubor shrnuje milníky.
+Podrobný backlog F-01 až F-52 a závazné podmínky jsou v kořenovém [AGENTS.md](../AGENTS.md). Podrobné UX, závislosti, bezpečnost a akceptační kritéria jsou v [functional specification](functional-specification.md). Tento soubor shrnuje milníky.
 
 | Milník | Cíl | Výstup / exit criteria |
 |---|---|---|
@@ -19,9 +19,9 @@ Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít r
 
 ## Aktuální stav implementace (2026-11-20; aktualizováno po CI běhu)
 
-Detailní rozhodnutí pro všech 45 funkcí F-01 až F-45 je v [feature matrix](feature-matrix.md); upstream změny se evidují v [upstream watch](upstream-watch.md).
+Detailní rozhodnutí pro funkce F-01 až F-52 je v [feature matrix](feature-matrix.md); jejich funkční kontrakty jsou v [functional specification](functional-specification.md). Upstream změny se evidují v [upstream watch](upstream-watch.md).
 
-CI evidence (2026-11-20): [Python checks run 44768199254](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44768199254) passed 134 tests on Python 3.10–3.13, Ruff, app packaging and artifact upload; native Ubuntu ARM64 passed clean offline wheel installation, SQLite/CLI smoke tests, isolated core imports and packaged `.fap.py` startup with a test FlipCTL stub. The same run's Debian Trixie ARM64 container job passed `python3`, SQLite 3.46.1, schema initialization and bundled-core imports. Documentation validation passed. [Security run 44768199325](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44768199325) passed pip-audit, high-severity Bandit and compilation. [CodeQL run 44768199063](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44768199063) completed successfully for Python and GitHub Actions. This remains CI/userspace validation; no Flipper One hardware or live network test has been performed.
+CI evidence (2026-11-20): [Python checks run 44771202433](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44771202433) passed 137 tests on Python 3.10–3.13, Ruff, app packaging and artifact upload; native Ubuntu ARM64 passed clean offline wheel installation, SQLite/CLI smoke tests, isolated core imports and packaged `.fap.py` startup with a test FlipCTL stub. The same run's Debian Trixie ARM64 container job passed `python3`, SQLite 3.46.1, schema initialization and bundled-core imports. Documentation validation passed. [Security run 44771202422](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44771202422) passed pip-audit, high-severity Bandit and compilation. [CodeQL run 44771202629](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44771202629) completed successfully for Python and GitHub Actions. This remains CI/userspace validation; no Flipper One hardware or live network test has been performed.
 
 Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
 
@@ -46,7 +46,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
 | Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
-| Linux ARM64 packaging/runtime | Ověřeno v GitHub Actions | Run [44768199254](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44768199254): nativní `aarch64`, 134 testů, Ruff, `py3-none-any` wheel, čistá offline instalace bez `--no-deps`, SQLite/CLI, sestavení FlipCTL balíčku, import všech zabalených modulů bez site-packages a spuštění `.fap.py` se simulovaným FlipCTL modulem. Navíc Debian Trixie ARM64 kontejner ověřil `python3`, SQLite 3.46.1, schema initialization a bundle imports. Ani to není kompletní Flipper OS image nebo fyzické zařízení. |
+| Linux ARM64 packaging/runtime | Ověřeno v GitHub Actions | Run [44768199254](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44768199254): nativní `aarch64`, 137 testů, Ruff, `py3-none-any` wheel, čistá offline instalace bez `--no-deps`, SQLite/CLI, sestavení FlipCTL balíčku, import všech zabalených modulů bez site-packages a spuštění `.fap.py` se simulovaným FlipCTL modulem. Navíc Debian Trixie ARM64 kontejner ověřil `python3`, SQLite 3.46.1, schema initialization a bundle imports. Ani to není kompletní Flipper OS image nebo fyzické zařízení. |
 | Markdown dokumentace | Ověřeno v GitHub Actions | Run [44768199254](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44768199254): interní Markdown cesty, obrázky a fragmenty nadpisů; kontrola běží offline a ignoruje fenced code blocks. Externí URL se nekontrolují. |
 
 ### Co je potřeba před označením M3 za dokončený
