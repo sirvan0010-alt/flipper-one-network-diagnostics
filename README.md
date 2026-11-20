@@ -32,7 +32,7 @@ flipper-diag interfaces --json
 flipper-diag routes --json
 flipper-diag dns --json
 flipper-diag local-check --json
-# Active test: one explicitly authorized IP, per-command confirmation required
+# Example only: replace this TEST-NET address with one IP you are authorized to test
 flipper-diag ping --target 192.0.2.1 --scope 192.0.2.1/32 --confirm-active --json
 flipper-diag interfaces
 flipper-diag link eth0
