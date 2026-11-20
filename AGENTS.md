@@ -104,7 +104,7 @@ Zdroj: LR = LinkRunner, ES = EtherScope nXG, AC = AirCheck G2/G3, CS = CyberScop
 | Lokální vzdálené ovládání (VNC/web) | ANO |
 | Link-Live, AllyCare, InSites, web remote control | NEPŘEJÍMÁME |
 | Reporty CSV/PDF/HTML lokálně | ANO |
-| Proxmark5 integrace přes USB | **[neověřeno]** |
+| Proxmark5 integrace přes USB/Wi-Fi/BLE | **[neověřeno: ověřit konkrétní PM5+BWM firmware, transport a zabezpečení]** |
 
 ## 6. Plán funkcí (backlog k implementaci)
 Jen funkce, které Flipper One hardwarově zvládne (ANO) nebo zvládne s omezením (ČÁSTEČNĚ). Hardwarové věci jsou v sekci 4.
@@ -170,7 +170,7 @@ CS = CyberScope (CE/Air), F1 = vlastní funkce Flipper One, vlastní = naše dop
 | F-42 | Vzdálené ovládání | Ovládání zařízení přes VNC nebo web v lokální síti | LR, ES, AC | ANO | M6 |
 | F-43 | Export a import nastavení | Záloha a přenos profilů, cílů a prahů mezi jednotkami | ES | ANO | M5 |
 | F-44 | Safe mode | Přepínač, který povolí jen pasivní funkce (pro produkční sítě) | vlastní | ANO | M3 |
-| F-45 | Proxmark5 integrace | Společné ovládání a scénáře přes USB **[neověřeno]** | vlastní | ČÁSTEČNĚ | M7 |
+| F-45 | Proxmark5 integrace | Společné ovládání přes USB jako základ; volitelně Wi-Fi/BLE přes BWM, pouze po ověření firmware/transportu/zabezpečení | vlastní | ČÁSTEČNĚ | M7 |
 
 ## 7. Postup od nuly
 **M0 – Příprava.** Přečti dokumentaci Flipper One: How to join, Tech specs, Wi-Fi & Bluetooth, Flipper OS, Testing → Network.
@@ -211,3 +211,23 @@ Tato tabulka má přednost před původním plánem, pokud se funkce překrývá
 První integrační cíl je `flipctl-slint/docs/apps.md` a Python Runtime (`provides = "py"`). Jeho `.fap.py` API je veřejně dokumentované, ale větev `dev` se mění; před releasem ověřit konkrétní commit. `apps/Test Tools/ethernet-tester.fap.py` je experimentální test nástroj s nedokumentovanými RTL8211F registry a známou kolizí s kernel MII pollingem; nekopírovat jej ani nepovažovat za bezpečný kabelový tester.
 
 Stavy upstream funkce se vždy zapisují jednou z kategorií: **zdokumentovaný záměr**, **prototyp**, **sloučený kód**, **ověřeno na cílovém HW**, **vydáno**. Pouhé uvedení na produktové stránce neznamená hotovou funkci.
+
+
+### 6.6 Rozšíření funkčního plánu: Proxmark5 a volitelný CAN modul
+
+Podrobné UX, datové kontrakty, závislosti, bezpečnost a akceptační kritéria jsou v [docs/functional-specification.md](docs/functional-specification.md). Rozšíření nemění prioritu drátového MVP.
+
+| ID | Funkce | Rozsah | Fáze / stav |
+|---|---|---|---|
+| F-45 | Proxmark5 connection/orchestration | USB jako základ; volitelné Wi-Fi/BLE transporty přes oficiální Iceman client a BWM | M7 / Verify first |
+| F-46 | PM5 Wi-Fi transport | BWM STA + TCP klient; izolovaná důvěryhodná síť, bez WAN vystavení | M7 / Verify first |
+| F-47 | PM5 BLE transport | BWM BLE GATT; ověřit passkey/bonding a nativní Linux transport nebo bridge | M7 / Verify first |
+| F-48 | PM5 status/battery | Read-only firmware, BWM, baterie, napájení a wireless status | M7 / Build after transport |
+| F-49 | Authorized LF/HF workflow | Identifikace/čtení vlastních a laboratorních tagů; UHF až po ověření | M7 / Verify first |
+| F-50 | RFID capture/analysis/export | Časově a velikostně omezený capture a lokální analýza; citlivé dumpy chráněné | M7 / Verify first |
+| F-51 | Test-tag write/verify/emulation | Pouze prázdná/testovací média; vypnuto do samostatné bezpečnostní a HW validace | M7 / Deferred |
+| F-52 | Read-only automotive CAN capture | Samostatný experiment s externím transceiverem, pouze RX a black-box evidence | M7 / Deferred |
+
+**PM5 bezdrátová omezení:** oficiální Iceman dokumentace popisuje BWM, Wi-Fi STA/TCP a BLE. V dokumentaci je však rozdíl v popisu BLE zabezpečení: usage guide uvádí plaintext/no bonding, zatímco aktuální command reference uvádí BLE pairing/passkey příkazy. Do ověření konkrétní verze je bezdrátové ovládání označeno Verify first. Wi-Fi TCP se nesmí vystavit do internetu; vyžaduje izolovanou LAN/VLAN a firewall. Nikdy automaticky neflashovat PM5/BWM firmware z naší aplikace.
+
+**Tesla CAN inspirace:** z repozitáře flipper-tesla-fsd přebírat pouze principy read-only capture, timestampingu, capability detection, test fixture a black-box evidence. Nezařazovat FSD unlock, nag suppression, frame injection/replay, změny řízení/pohonu ani zápisy do ECU. F-52 je oddělený M7 experiment a není součástí síťového MVP.
