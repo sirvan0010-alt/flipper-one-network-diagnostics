@@ -15,7 +15,9 @@ def _select_ethernet_interface(
     names = [
         item["name"]
         for item in interfaces
-        if item.get("link_type") == "ether" and isinstance(item.get("name"), str)
+        if item.get("link_type") == "ether"
+        and item.get("wireless") is False
+        and isinstance(item.get("name"), str)
     ]
     if requested is not None:
         if requested not in names:
@@ -67,14 +69,37 @@ def collect_local_check(interface: str | None = None) -> DiagnosticResult:
         *dns_result.limitations,
     ]
 
-    if not any(item.get("link_type") == "ether" for item in interfaces):
+    if not any(
+        item.get("link_type") == "ether" and item.get("wireless") is False
+        for item in interfaces
+    ):
+        unclassified = any(
+            item.get("link_type") == "ether" and item.get("wireless") is None
+            for item in interfaces
+        )
         findings.append(
             Finding(
-                code="ETH-INTERFACE-NOT-FOUND",
+                code=(
+                    "ETH-INTERFACE-MEDIUM-UNKNOWN"
+                    if unclassified
+                    else "ETH-INTERFACE-NOT-FOUND"
+                ),
                 severity="warning",
-                title="No Ethernet interface found",
-                detail="No interface with Ethernet link type was returned by iproute2.",
-                recommendation="Connect a supported Ethernet adapter and check the system driver.",
+                title=(
+                    "Ethernet interface type could not be confirmed"
+                    if unclassified
+                    else "No Ethernet interface found"
+                ),
+                detail=(
+                    "One or more Ethernet-like interfaces could not be classified as wired or Wi-Fi."
+                    if unclassified
+                    else "No confirmed wired Ethernet interface was returned by iproute2 and sysfs."
+                ),
+                recommendation=(
+                    "Check /sys/class/net interface metadata and the kernel driver."
+                    if unclassified
+                    else "Connect a supported Ethernet adapter and check the system driver."
+                ),
             )
         )
         component_status["link"] = "not_available"
