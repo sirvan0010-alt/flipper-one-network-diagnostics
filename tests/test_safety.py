@@ -71,3 +71,28 @@ def test_non_string_or_empty_targets_are_blocked(target):
     auth = ActiveAuthorization("connectivity", "192.0.2.0/24", (target,), True)
     with pytest.raises(ActiveOperationBlocked, match="Targets must be"):
         require_active_allowed(safe_mode=False, authorization=auth)
+
+
+def test_active_operation_is_bound_to_one_explicitly_authorized_target():
+    auth = ActiveAuthorization(
+        "connectivity check",
+        "192.0.2.0/24",
+        ("192.0.2.1", "192.0.2.2"),
+        True,
+    )
+    require_active_allowed(
+        safe_mode=False, authorization=auth, target="192.0.2.1"
+    )
+    with pytest.raises(ActiveOperationBlocked, match="not included"):
+        require_active_allowed(
+            safe_mode=False, authorization=auth, target="192.0.2.3"
+        )
+
+
+@pytest.mark.parametrize("target", [None, "example.com", 1234])
+def test_active_operation_rejects_non_literal_requested_target(target):
+    auth = ActiveAuthorization("connectivity check", "192.0.2.0/24", ("192.0.2.1",), True)
+    with pytest.raises(ActiveOperationBlocked, match="literal IP"):
+        require_active_allowed(
+            safe_mode=False, authorization=auth, target=target
+        )
