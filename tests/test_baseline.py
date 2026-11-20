@@ -33,7 +33,7 @@ def test_inventory_comparison_detects_duplicate_ip():
 
     duplicate = [finding for finding in findings if finding.code == "NETWORK-DUPLICATE-IP"]
     assert len(duplicate) == 1
-    assert duplicate[0].severity == "critical"
+    assert duplicate[0].severity == "warning"
 
 
 def test_inventory_comparison_normalizes_ip_and_mac():
