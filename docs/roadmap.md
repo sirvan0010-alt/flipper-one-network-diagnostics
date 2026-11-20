@@ -21,7 +21,7 @@ Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít r
 
 Detailní rozhodnutí pro všech 45 funkcí F-01 až F-45 je v [feature matrix](feature-matrix.md); upstream změny se evidují v [upstream watch](upstream-watch.md).
 
-CI evidence (2026-11-20): [run 44746918230](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918230) passed 126 tests on Python 3.10–3.13, Ruff checks and FlipCTL app packaging/upload. [Security run 44746918286](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918286) passed pip-audit, high-severity Bandit and Python compilation. [CodeQL run 44746918047](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918047) completed successfully. This is desktop/CI validation only; no Flipper One hardware or live network test has been performed.
+CI evidence (2026-11-20): [run 44746918230](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918230) passed 126 tests on Python 3.10–3.13, Ruff checks and FlipCTL app packaging/upload. [Security run 44746918286](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918286) passed pip-audit, high-severity Bandit and compilation. [CodeQL run 44746918047](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918047) completed successfully. This is desktop/CI validation only; no Flipper One hardware or live network test has been performed.
 
 Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
 
@@ -46,12 +46,13 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
 | Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
+| Linux ARM64 packaging/runtime | Přidán CI test | Nativní ARM64 runner, clean offline wheel install, SQLite/CLI smoke test a app bundle; čeká na první úspěšný Actions run. Není to test Flipper OS ani fyzického zařízení. |
 
 ### Co je potřeba před označením M3 za dokončený
 
-- CI musí projít celou podporovanou Python maticí.
+- CI musí projít celou podporovanou Python maticí včetně ARM64 jobu.
 - Doplnit integrační testy databáze, migrací a CLI.
 - Na cílovém zařízení ověřit Python Runtime, import balíčku vedle `.fap.py` skriptu, zobrazení menu, mapování kláves a zápis SQLite.
 - Připravit instalaci balíčku bez vývojových závislostí.
-- Ověřit runtime a spotřebu na podporované ARM64 Linux desce, později na Flipper One.
+- Po ARM64 CI ověřit runtime a spotřebu na podporované ARM64 Linux desce, později na Flipper One.
 - Uzavřít rozhraní pro FlipCTL až podle skutečného upstream API; neblokovat tím přenosné jádro.
