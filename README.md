@@ -34,6 +34,8 @@ flipper-diag dns --json
 flipper-diag local-check --json
 # Example only: replace this TEST-NET address with one IP you are authorized to test
 flipper-diag ping --target 192.0.2.1 --scope 192.0.2.1/32 --confirm-active --json
+# One TCP handshake to one explicitly authorized port (no application payload)
+flipper-diag tcp-connect --target 192.0.2.1 --port 443 --scope 192.0.2.1/32 --confirm-active --json
 flipper-diag interfaces
 flipper-diag link eth0
 flipper-diag baseline save --name office --input inventory.json
