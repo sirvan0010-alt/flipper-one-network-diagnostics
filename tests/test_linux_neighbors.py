@@ -80,3 +80,19 @@ def test_empty_neighbor_cache_is_not_a_failure(monkeypatch):
     result = linux_neighbors.collect_neighbor_cache()
     assert result.status == "ok"
     assert result.data["count"] == 0
+
+
+def test_partial_neighbor_cache_failure_is_warning(monkeypatch):
+    monkeypatch.setattr(linux_neighbors.shutil, "which", lambda name: "/usr/sbin/ip")
+
+    def fake_run(command, **kwargs):
+        if "-6" in command:
+            return subprocess.CompletedProcess(command, 1, "", "netlink error")
+        return subprocess.CompletedProcess(command, 0, V4, "")
+
+    monkeypatch.setattr(linux_neighbors.subprocess, "run", fake_run)
+    result = linux_neighbors.collect_neighbor_cache()
+
+    assert result.status == "warning"
+    assert result.data["count"] == 3
+    assert any("inet6" in note for note in result.limitations)
