@@ -54,7 +54,8 @@ def parse_neighbor_json(payload: str, *, family: str) -> list[dict[str, Any]]:
                 "mac_address": item.get("lladdr"),
                 "interface": item.get("dev"),
                 "state": states,
-                "usable": any(state in USABLE_STATES for state in states),
+                "usable": any(state in USABLE_STATES for state in states)
+                and not any(state in ("FAILED", "INCOMPLETE") for state in states),
                 "router": bool(item.get("router", False)),
             }
         )
@@ -126,7 +127,7 @@ def collect_neighbor_cache() -> DiagnosticResult:
 
     return DiagnosticResult(
         collector="linux.neighbor_cache",
-        status="ok" if neighbors or not limitations else "warning",
+        status="warning" if limitations else "ok",
         data={
             "neighbors": neighbors,
             "count": len(neighbors),
