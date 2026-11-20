@@ -12,6 +12,8 @@ locally. Local Check combines these observations without sending network probes.
 
 from __future__ import annotations
 
+import ipaddress
+
 import flipctl
 
 from flipper_diag.linux_dns import collect_dns_config
@@ -19,6 +21,9 @@ from flipper_diag.linux_ethtool import collect_link_status
 from flipper_diag.linux_ip import collect_ip_interfaces
 from flipper_diag.linux_routes import collect_default_routes
 from flipper_diag.local_check import collect_local_check
+from flipper_diag.ping import run_ping
+from flipper_diag.safety import ActiveAuthorization
+from flipper_diag.tcp_connect import run_tcp_connect
 from flipper_diag.store import (
     default_database_path,
     list_results,
@@ -31,6 +36,8 @@ state = {
     "detail_refresh": None,
     "history_lines": [],
     "last_saved": "",
+    "confirm_rows": [],
+    "pending_active_action": None,
 }
 
 
@@ -218,6 +225,179 @@ def show_dns():
     detail.show()
 
 
+
+def wired_gateway_route():
+    """Return the default route that uses a confirmed wired Ethernet interface."""
+    wired_names = {item["name"] for item in ethernet_interfaces()}
+    result = collect_default_routes()
+    candidates = [
+        route
+        for route in result.data.get("routes", [])
+        if route.get("device") in wired_names and route.get("gateway")
+    ]
+    candidates.sort(
+        key=lambda route: (
+            route.get("family") != "inet",
+            route.get("metric") if route.get("metric") is not None else 0,
+        )
+    )
+    return candidates[0] if candidates else None
+
+
+def show_active_confirmation(title, target, interface, description, action):
+    """Present a one-shot confirmation before any active packet is sent."""
+    state["confirm_rows"] = [
+        flipctl.heading(title, "ACTIVE"),
+        flipctl.rule(),
+        flipctl.pair("Target", target),
+        flipctl.pair("Interface", interface or "-"),
+        flipctl.text(description),
+        flipctl.rule(),
+        flipctl.text("This action sends traffic to one target only."),
+        flipctl.text("No scan, background task or automatic retry."),
+        flipctl.text("Press Confirm to send, or Cancel to return."),
+    ]
+    state["pending_active_action"] = action
+    confirm_detail.show()
+
+
+def render_active_result(title, result):
+    saved = persist(result)
+    rows = [flipctl.heading(title, result.status.upper())]
+    for key in ("target", "ip_version", "port", "connected", "packets_transmitted",
+                "packets_received", "packet_loss_percent", "rtt_avg_ms",
+                "timeout_seconds"):
+        if key in result.data:
+            label = key.replace("_", " ").title()
+            value = result.data[key]
+            if key == "rtt_avg_ms" and value is not None:
+                value = f"{value} ms"
+            rows.append(flipctl.pair(label, str(value)))
+    for finding in result.findings:
+        rows.append(flipctl.rule())
+        rows.append(flipctl.text(f"{finding.severity.upper()}: {finding.title}"))
+        if finding.detail:
+            rows.extend(flipctl.text(line, dim=True) for line in flipctl.wrap(finding.detail))
+        if finding.recommendation:
+            rows.extend(flipctl.text(line) for line in flipctl.wrap(finding.recommendation))
+    for note in result.limitations:
+        rows.append(flipctl.text(note, dim=True))
+    rows.append(flipctl.pair("Saved", saved, dim=True))
+    state["detail_rows"] = rows
+    state["detail_refresh"] = None
+    detail.show()
+
+
+def run_confirmed_active_action():
+    action = state.pop("pending_active_action", None)
+    if action is None:
+        main_menu.show()
+        return
+    try:
+        result, title = action()
+    except Exception as exc:
+        state["detail_rows"] = [
+            flipctl.heading("Active test failed", "ERROR"),
+            flipctl.text(type(exc).__name__),
+            flipctl.text("No retry was attempted."),
+        ]
+        state["detail_refresh"] = None
+        detail.show()
+        return
+    render_active_result(title, result)
+
+
+def show_ping_gateway_confirmation():
+    route = wired_gateway_route()
+    if route is None:
+        state["detail_rows"] = [
+            flipctl.heading("Ping gateway", "UNAVAILABLE"),
+            flipctl.text("No default gateway was found on a confirmed wired Ethernet interface."),
+            flipctl.text("Connect the wired port and check its route before testing."),
+        ]
+        state["detail_refresh"] = None
+        detail.show()
+        return
+
+    target = route["gateway"]
+    interface = route.get("device") or "-"
+    def action():
+        address = ipaddress.ip_address(target)
+        prefix = 32 if address.version == 4 else 128
+        authorization = ActiveAuthorization(
+            purpose="one-shot wired gateway ICMP test",
+            scope=f"{address}/{prefix}",
+            targets=(str(address),),
+            confirmed=True,
+        )
+        result = run_ping(
+            str(address),
+            authorization=authorization,
+            safe_mode=False,
+            count=3,
+            timeout_seconds=1,
+        )
+        return result, "ICMP gateway test"
+
+    show_active_confirmation(
+        "Confirm ICMP test",
+        target,
+        interface,
+        "Will send 3 ICMP echo requests with a 1-second per-request timeout.",
+        action,
+    )
+
+
+def tcp_port_items():
+    return [
+        flipctl.item("DNS", status="TCP 53"),
+        flipctl.item("HTTP", status="TCP 80"),
+        flipctl.item("HTTPS", status="TCP 443"),
+        flipctl.item("SSH", status="TCP 22"),
+    ]
+
+
+def show_tcp_gateway_confirmation(port):
+    route = wired_gateway_route()
+    if route is None:
+        state["detail_rows"] = [
+            flipctl.heading("TCP gateway test", "UNAVAILABLE"),
+            flipctl.text("No default gateway was found on a confirmed wired Ethernet interface."),
+        ]
+        state["detail_refresh"] = None
+        detail.show()
+        return
+
+    target = route["gateway"]
+    interface = route.get("device") or "-"
+    def action():
+        address = ipaddress.ip_address(target)
+        prefix = 32 if address.version == 4 else 128
+        authorization = ActiveAuthorization(
+            purpose=f"one-shot wired TCP connect to port {port}",
+            scope=f"{address}/{prefix}",
+            targets=(str(address),),
+            confirmed=True,
+            ports=(port,),
+        )
+        result = run_tcp_connect(
+            str(address),
+            port,
+            authorization=authorization,
+            safe_mode=False,
+            timeout_seconds=3,
+        )
+        return result, f"TCP gateway port {port}"
+
+    show_active_confirmation(
+        f"Confirm TCP port {port}",
+        target,
+        interface,
+        f"Will attempt one TCP handshake to {target}:{port}. No application payload will be sent.",
+        action,
+    )
+
+
 def show_history():
     """Show the newest local diagnostic runs."""
     try:
@@ -245,11 +425,13 @@ def menu_items():
         flipctl.item("Interfaces", status=f"{count} found"),
         flipctl.item("Ethernet link", status=f"{ethernet_count} ports"),
         flipctl.item("Local Check", status="No probes"),
+        flipctl.item("Ping wired gateway", status="3 ICMP requests"),
+        flipctl.item("TCP gateway port", status="One port at a time"),
         flipctl.item("Default route", status="IPv4 / IPv6"),
         flipctl.item("DNS config", status="Local"),
         flipctl.item("History", status="Local"),
         flipctl.item("Safe Mode", status="ON"),
-        flipctl.item("About", status="v0.4"),
+        flipctl.item("About", status="v0.5"),
     ]
 
 
@@ -270,9 +452,10 @@ def show_safe_mode():
     state["detail_rows"] = [
         flipctl.heading("Safe Mode", "ON"),
         flipctl.rule(),
-        flipctl.text("Active network tests are disabled."),
-        flipctl.text("No scans or probes are sent."),
-        flipctl.text("Current collectors only read local OS state."),
+        flipctl.text("Safe Mode is ON by default."),
+        flipctl.text("Active tests require a one-shot on-device confirmation."),
+        flipctl.text("Only one gateway IP and one selected TCP port are tested."),
+        flipctl.text("No subnet scans, background tests or automatic retries."),
         flipctl.rule(),
         flipctl.pair("Interface inventory", "read-only"),
         flipctl.pair("Ethernet link", "read-only"),
@@ -285,12 +468,12 @@ def show_safe_mode():
 
 def show_about():
     state["detail_rows"] = [
-        flipctl.heading("Network Diagnostics", "v0.4"),
+        flipctl.heading("Network Diagnostics", "v0.5"),
         flipctl.text("Designed for standalone Flipper One use."),
         flipctl.rule(),
         flipctl.pair("Control", "device keys"),
         flipctl.pair("Storage", "local SQLite"),
-        flipctl.pair("Network mode", "passive/read-only"),
+        flipctl.pair("Network mode", "passive + confirmed one-shot tests"),
         flipctl.pair("PC required", "no; target validation pending"),
         flipctl.rule(),
         flipctl.text("Optional PC/browser tools are not needed for normal use."),
@@ -312,14 +495,19 @@ def open_selected(menu):
         elif selected == 2:
             show_local_check()
         elif selected == 3:
-            show_routes()
+            show_ping_gateway_confirmation()
         elif selected == 4:
-            show_dns()
+            tcp_port_menu.selected = 0
+            tcp_port_menu.show()
         elif selected == 5:
-            show_history()
+            show_routes()
         elif selected == 6:
-            show_safe_mode()
+            show_dns()
         elif selected == 7:
+            show_history()
+        elif selected == 8:
+            show_safe_mode()
+        elif selected == 9:
             show_about()
     elif menu is link_menu:
         ports = ethernet_interfaces()
@@ -328,7 +516,7 @@ def open_selected(menu):
 
 
 def main():
-    global main_menu, link_menu, detail, history
+    global main_menu, link_menu, detail, history, confirm_detail, tcp_port_menu
 
     detail = flipctl.Detail(
         rows=lambda: state["detail_rows"],
@@ -343,6 +531,40 @@ def main():
             return True
         if key is flipctl.Key.VIEW and state["detail_refresh"]:
             state["detail_refresh"]()
+            return True
+        return False
+
+    confirm_detail = flipctl.Detail(
+        rows=lambda: state["confirm_rows"],
+        buttons=["Cancel", "", "", "", "Confirm"],
+        fit_gauges=True,
+    )
+
+    @confirm_detail.on_key
+    def confirm_detail_keys(key):
+        if key in (flipctl.Key.ESCAPE, flipctl.Key.POWER):
+            state["pending_active_action"] = None
+            main_menu.show()
+            return True
+        if key is flipctl.Key.RUN:
+            run_confirmed_active_action()
+            return True
+        return False
+
+    tcp_port_menu = flipctl.Menu(
+        items=tcp_port_items,
+        buttons=["Menu", "", "", "", "Select"],
+    )
+
+    @tcp_port_menu.on_key
+    def tcp_port_menu_keys(key):
+        if key is flipctl.Key.ESCAPE:
+            main_menu.show()
+            return True
+        if key in (flipctl.Key.OK, flipctl.Key.RUN):
+            ports = [53, 80, 443, 22]
+            if tcp_port_menu.selected < len(ports):
+                show_tcp_gateway_confirmation(ports[tcp_port_menu.selected])
             return True
         return False
 
