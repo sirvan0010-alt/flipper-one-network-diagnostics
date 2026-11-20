@@ -39,7 +39,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | Local readiness check | Implementováno | Aggregates interface, Ethernet link, default route and DNS configuration; no active probes; unit/UI/CLI tests |
 | Evidence-bounded problem engine | Částečně implementováno | Local Check reports observations and cautious likely causes; root cause is never marked confirmed |
 | Inventory diff | Implementováno | Nová/chybějící zařízení, změna IP, duplicitní IP; vstupní pozorování musí dodat collector/import |
-| DHCP/DNS/gateway AutoTest | Částečně připraveno | Local Check combines local config; DHCP lease/offer, DNS resolution and gateway reachability are not yet tested |
+| DHCP/DNS/gateway AutoTest | Částečně připraveno | Local Check combines local config; a one-target authorized ICMP CLI exists, but DHCP lease/offer, DNS resolution, TCP and wired AutoTest UI are not yet implemented |
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
 | Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
