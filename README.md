@@ -49,7 +49,7 @@ flipper-diag history --json
 - [Feature matrix](docs/feature-matrix.md) – rozhodnutí pro všech 45 plánovaných funkcí: reuse, integrace, vlastní vývoj nebo odklad.
 - [Architecture](docs/architecture.md) – oddělení jádra, kolektorů, úložiště, API a prezentace.
 - [Data model](docs/data-model.md) – lokální SQLite a verzování schématu.
-- [Verification register](docs/verification.md) – evidence skutečných hardwarových testů.
+- [Verification register](docs/verification.md) – evidence skutečných hardwarových testů a první instalační smoke test po doručení zařízení.
 - [Roadmap](docs/roadmap.md) – milníky M0–M7.
 - [AGENTS.md](AGENTS.md) – úplný backlog F-01 až F-45 a závazná pravidla.
 
