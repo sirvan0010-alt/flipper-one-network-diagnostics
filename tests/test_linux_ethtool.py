@@ -74,10 +74,10 @@ def test_collector_marks_link_down(monkeypatch):
 def test_sysfs_fallback_reads_carrier_speed_and_duplex(tmp_path, monkeypatch):
     interface = tmp_path / "end0"
     interface.mkdir()
-    (interface / "operstate").write_text("up\\n", encoding="utf-8")
-    (interface / "carrier").write_text("1\\n", encoding="utf-8")
-    (interface / "speed").write_text("1000\\n", encoding="utf-8")
-    (interface / "duplex").write_text("full\\n", encoding="utf-8")
+    (interface / "operstate").write_text("up\n", encoding="utf-8")
+    (interface / "carrier").write_text("1\n", encoding="utf-8")
+    (interface / "speed").write_text("1000\n", encoding="utf-8")
+    (interface / "duplex").write_text("full\n", encoding="utf-8")
     monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
     monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: None)
 
@@ -98,8 +98,8 @@ def test_sysfs_fallback_reads_carrier_speed_and_duplex(tmp_path, monkeypatch):
 def test_sysfs_fallback_reports_link_down(tmp_path, monkeypatch):
     interface = tmp_path / "end0"
     interface.mkdir()
-    (interface / "operstate").write_text("down\\n", encoding="utf-8")
-    (interface / "carrier").write_text("0\\n", encoding="utf-8")
+    (interface / "operstate").write_text("down\n", encoding="utf-8")
+    (interface / "carrier").write_text("0\n", encoding="utf-8")
     monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
     monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: None)
 
@@ -112,7 +112,7 @@ def test_sysfs_fallback_reports_link_down(tmp_path, monkeypatch):
 def test_sysfs_fallback_reports_unavailable_carrier(tmp_path, monkeypatch):
     interface = tmp_path / "end0"
     interface.mkdir()
-    (interface / "operstate").write_text("unknown\\n", encoding="utf-8")
+    (interface / "operstate").write_text("unknown\n", encoding="utf-8")
     monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
     monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: None)
 
@@ -126,8 +126,8 @@ def test_sysfs_fallback_reports_unavailable_carrier(tmp_path, monkeypatch):
 def test_ethtool_failure_falls_back_to_sysfs(tmp_path, monkeypatch):
     interface = tmp_path / "end0"
     interface.mkdir()
-    (interface / "operstate").write_text("up\\n", encoding="utf-8")
-    (interface / "carrier").write_text("1\\n", encoding="utf-8")
+    (interface / "operstate").write_text("up\n", encoding="utf-8")
+    (interface / "carrier").write_text("1\n", encoding="utf-8")
     monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
     monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: "/usr/sbin/ethtool")
     monkeypatch.setattr(
