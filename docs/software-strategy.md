@@ -59,7 +59,7 @@ Official FlipCTL material (README at commit `3285ba6caf`, 2026-06-19) describes:
 - a headless WebKit renderer on the Flipper display;
 - optional Web UI, TUI, and desktop/browser control interfaces.
 
-The public `flipperdevices/flipctl` repository currently has a high-level README and architecture proposals in open PRs. At the 2026-11-20 review, its default `dev` branch had no demonstrated stable, versioned third-party plugin contract. The latest visible upstream commits were from 2026-06-19. Do not infer that the proposed plugin API is production-ready.
+The public `flipperdevices/flipctl` repository currently has a high-level architecture README and open proposals. The README explicitly asks the community to propose the architecture and plugin system. At the 2026-11-20 review, its default `dev` branch had no demonstrated stable, versioned third-party plugin contract. The linked Fake FLipCTL2 is described upstream as a rough prototype needing rework. Do not infer that a proposed plugin API or fake UI harness is production-ready.
 
 Sources:
 - https://github.com/flipperdevices/flipctl
@@ -72,7 +72,7 @@ Decision:
 - Once the upstream plugin schema/API is implemented and documented, write a thin FlipCTL wrapper that calls our CLI/core.
 - Re-check upstream before each integration change; do not target a fork or an unmerged proposal as if it were official.
 
-The upstream `flipperdevices/flipperone-testing` repository contains `fake-flipctl2`, which is a UI/test harness, not proof of the production FlipCTL runtime. It may be useful for later visual smoke tests, but it must not be treated as a faithful emulator of the final device or production backend.
+The upstream `flipperdevices/flipperone-testing` repository contains `fake-flipctl2`, which the FlipCTL README describes as a rough AI-made prototype needing rework. It is not proof of the production FlipCTL runtime or a faithful emulator of the final device/backend.
 
 Source:
 - https://github.com/flipperdevices/flipperone-testing/tree/dev/fake-flipctl2
