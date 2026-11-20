@@ -180,3 +180,56 @@ def test_requested_interface_must_be_in_local_ethernet_inventory(monkeypatch):
         assert "not present" in str(exc)
     else:
         raise AssertionError("invalid interface should be rejected")
+
+
+def test_local_check_flags_default_route_on_another_interface(monkeypatch):
+    monkeypatch.setattr(
+        local_check,
+        "collect_ip_interfaces",
+        lambda: _result(
+            "linux.ip_address",
+            data={
+                "interfaces": [
+                    {
+                        "name": "end0",
+                        "link_type": "ether",
+                        "operstate": "UP",
+                        "addresses": [{"family": "inet", "local": "192.0.2.10"}],
+                    },
+                    {
+                        "name": "wlan0",
+                        "link_type": "ether",
+                        "operstate": "UP",
+                        "addresses": [{"family": "inet", "local": "198.51.100.10"}],
+                    },
+                ]
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        local_check,
+        "collect_default_routes",
+        lambda: _result(
+            "linux.default_routes",
+            data={"routes": [{"family": "inet", "device": "wlan0", "gateway": "198.51.100.1"}]},
+        ),
+    )
+    monkeypatch.setattr(
+        local_check,
+        "collect_dns_config",
+        lambda: _result("linux.resolver_config", data={"nameservers": ["192.0.2.53"]}),
+    )
+    monkeypatch.setattr(
+        local_check,
+        "collect_link_status",
+        lambda interface: _result(
+            "linux.ethtool", data={"link_detected": True}
+        ),
+    )
+
+    result = local_check.collect_local_check("end0")
+
+    assert result.status == "warning"
+    assert "ROUTE-DEFAULT-OTHER-INTERFACE" in {
+        finding.code for finding in result.findings
+    }
