@@ -21,3 +21,11 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: pytest
       - run: ruff check .
+      - name: Assemble deployable FlipCTL app
+        run: python scripts/package_flipctl_app.py --output "$RUNNER_TEMP/Network Diagnostics"
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: network-diagnostics-flipctl-app
+          path: ${{ runner.temp }}/Network Diagnostics/
+          if-no-files-found: error
