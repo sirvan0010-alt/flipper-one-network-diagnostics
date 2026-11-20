@@ -239,3 +239,18 @@ def test_ping_cli_passes_single_target_authorization(tmp_path, monkeypatch, caps
     assert kwargs["authorization"].scope == "192.0.2.0/24"
     assert kwargs["count"] == 2
     assert output["run_id"] == "ping-run-id"
+
+
+def test_ping_cli_rejects_out_of_scope_target_cleanly(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "ping", "--target", "198.51.100.1",
+            "--scope", "192.0.2.0/24", "--confirm-active",
+            "--db", str(tmp_path / "ping.sqlite3"),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        cli.main()
+    assert "outside the explicitly authorized scope" in capsys.readouterr().err
