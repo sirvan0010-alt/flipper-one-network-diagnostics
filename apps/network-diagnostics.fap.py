@@ -229,11 +229,20 @@ def wired_gateway_route():
     """Return the default route that uses a confirmed wired Ethernet interface."""
     wired_names = {item["name"] for item in ethernet_interfaces()}
     result = collect_default_routes()
-    candidates = [
-        route
-        for route in result.data.get("routes", [])
-        if route.get("device") in wired_names and route.get("gateway")
-    ]
+    candidates = []
+    for route in result.data.get("routes", []):
+        gateway = route.get("gateway")
+        if route.get("device") not in wired_names or not gateway:
+            continue
+        try:
+            address = ipaddress.ip_address(gateway)
+        except ValueError:
+            continue
+        # Link-local IPv6 needs a scope ID/interface binding; defer until the
+        # active collectors expose an explicit interface argument.
+        if address.version == 6 and address.is_link_local:
+            continue
+        candidates.append(route)
     candidates.sort(
         key=lambda route: (
             route.get("family") != "inet",
