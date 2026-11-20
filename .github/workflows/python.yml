@@ -2,7 +2,7 @@ name: Python checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, arm64-runtime-validation]
   pull_request:
     branches: [main]
   workflow_dispatch:
