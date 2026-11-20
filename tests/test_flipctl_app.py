@@ -81,6 +81,7 @@ def test_panel_menu_and_ethernet_flow_use_shared_core(monkeypatch):
         {
             "name": "end0",
             "link_type": "ether",
+            "wireless": False,
             "mac_address": "02:00:00:00:00:01",
             "operstate": "UP",
             "mtu": 1500,
