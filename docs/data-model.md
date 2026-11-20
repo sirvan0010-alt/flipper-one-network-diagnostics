@@ -47,7 +47,24 @@ Findings are deleted only when their parent run is deleted (foreign-key cascade)
 | created_at | ISO-8601 UTC timestamp |
 | inventory_json | Complete observed device inventory |
 
-The current API can save, load and list named baselines. Comparison logic is pure and offline: it identifies new/missing devices, address changes and duplicate IP observations. MAC addresses are used as identity; devices without a usable MAC are rejected rather than silently matched by a potentially unstable IP.
+The current API and CLI can save, load, list and compare named baselines. Comparison logic is pure and offline: it identifies new/missing devices, address changes and duplicate IP observations. MAC addresses are used as identity; devices without a usable MAC are rejected rather than silently matched by a potentially unstable IP.
+
+CLI input is a JSON array of observed devices, each with a `mac_address` and an `addresses` array. Example:
+
+```json
+[
+  {"mac_address": "02:00:00:00:00:01", "addresses": ["192.0.2.10"]}
+]
+```
+
+Example workflow:
+
+```bash
+flipper-diag baseline save --name office --input inventory.json
+flipper-diag baseline compare --name office --input current-inventory.json
+flipper-diag baseline list
+```
+
 
 ## Migration policy
 
