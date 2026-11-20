@@ -140,6 +140,17 @@ def show_local_check():
     rows.append(flipctl.pair("DNS config", statuses.get("dns", "unknown")))
     if result.interface:
         rows.append(flipctl.pair("Interface", result.interface))
+    assessment = result.data.get("assessment", {})
+    rows.append(flipctl.rule())
+    rows.append(flipctl.heading("Assessment", ""))
+    rows.extend(
+        flipctl.text(line)
+        for line in flipctl.wrap(assessment.get("summary", "No assessment available."))
+    )
+    for cause in assessment.get("likely_causes", []):
+        rows.append(flipctl.heading(cause["title"], cause["confidence"]))
+        rows.extend(flipctl.text(line, dim=True) for line in flipctl.wrap(cause["detail"]))
+        rows.extend(flipctl.text(line) for line in flipctl.wrap(cause["recommendation"]))
     for finding in result.findings:
         rows.append(flipctl.rule())
         rows.append(flipctl.text(f"{finding.severity.upper()}: {finding.title}"))
