@@ -1,6 +1,8 @@
+import sys
 from pathlib import Path
 
-from scripts.validate_docs import heading_slugs, unfenced_lines, validate
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from validate_docs import heading_slugs, unfenced_lines, validate
 
 
 def write_tree(root: Path, files: dict[str, str]) -> None:
