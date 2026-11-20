@@ -72,7 +72,7 @@ The first implementation slice is intentionally passive and local:
 - local-check: aggregate local-only interface/link/route/DNS configuration; explicitly not a reachability test.
 - SQLite history and named inventory baselines.
 
-These are building blocks, not a complete AutoTest. No DHCP exchange, DNS resolution, gateway ping, TCP probe, active discovery, packet injection or port scan is run by these commands.
+Interface inventory uses /sys/class/net/<interface>/wireless to distinguish Wi-Fi devices from wired Ethernet; unknown media are not silently treated as wired. These are building blocks, not a complete AutoTest. No DHCP exchange, DNS resolution, gateway ping, TCP probe, active discovery, packet injection or port scan is run by these commands.
 
 ## Decision gates before enabling active tests
 
