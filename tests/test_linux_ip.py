@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import json
 import subprocess
 
 import pytest
@@ -80,3 +81,30 @@ def test_sysfs_classifies_wireless_and_wired_interfaces(tmp_path, monkeypatch):
     assert linux_ip._is_wireless_interface("end0") is False
     assert linux_ip._is_wireless_interface("wlan0") is True
     assert linux_ip._is_wireless_interface("missing0") is None
+
+
+def test_collector_annotates_wireless_interfaces_from_sysfs(tmp_path, monkeypatch):
+    wired = tmp_path / "end0"
+    wireless = tmp_path / "wlan0"
+    wired.mkdir()
+    wireless.mkdir()
+    (wireless / "wireless").mkdir()
+    monkeypatch.setattr(linux_ip, "SYS_CLASS_NET", tmp_path)
+    monkeypatch.setattr(linux_ip.shutil, "which", lambda name: "/usr/sbin/ip")
+    payload = json.dumps(
+        [
+            {"ifname": "end0", "link_type": "ether", "addr_info": []},
+            {"ifname": "wlan0", "link_type": "ether", "addr_info": []},
+        ]
+    )
+    monkeypatch.setattr(
+        linux_ip.subprocess,
+        "run",
+        lambda command, **kwargs: subprocess.CompletedProcess(command, 0, payload, ""),
+    )
+
+    result = linux_ip.collect_ip_interfaces()
+
+    interfaces = {item["name"]: item for item in result.data["interfaces"]}
+    assert interfaces["end0"]["wireless"] is False
+    assert interfaces["wlan0"]["wireless"] is True
