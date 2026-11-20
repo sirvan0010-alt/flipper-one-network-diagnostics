@@ -16,6 +16,8 @@ import flipctl
 
 from flipper_diag.linux_ethtool import collect_link_status
 from flipper_diag.linux_ip import collect_ip_interfaces
+from flipper_diag.linux_dns import collect_dns_config
+from flipper_diag.linux_routes import collect_default_routes
 from flipper_diag.store import (
     default_database_path,
     list_results,
@@ -123,6 +125,58 @@ def refresh_link(interface: str):
     return result
 
 
+def show_routes():
+    """Show local IPv4 and IPv6 default routes without probing gateways."""
+    result = collect_default_routes()
+    saved = persist(result)
+    rows = [flipctl.heading("Default routes", result.status.upper())]
+    for route in result.data.get("routes", []):
+        rows.append(flipctl.rule())
+        rows.append(flipctl.heading(route["family"], route.get("device") or "no device"))
+        rows.append(flipctl.pair("Gateway", route.get("gateway") or "on-link"))
+        rows.append(flipctl.pair("Metric", str(route.get("metric") or "-")))
+        rows.append(flipctl.pair("Protocol", route.get("protocol") or "-"))
+    if not result.data.get("routes"):
+        rows.append(flipctl.text("No default route found."))
+    for finding in result.findings:
+        rows.append(flipctl.text(finding.title))
+        if finding.recommendation:
+            rows.extend(flipctl.text(line, dim=True) for line in flipctl.wrap(finding.recommendation))
+    for note in result.limitations:
+        rows.append(flipctl.text(note, dim=True))
+    rows.append(flipctl.pair("Saved", saved, dim=True))
+    state["detail_rows"] = rows
+    state["detail_refresh"] = show_routes
+    detail.show()
+
+
+def show_dns():
+    """Show local resolver settings; no DNS request is sent."""
+    result = collect_dns_config()
+    saved = persist(result)
+    data = result.data
+    rows = [flipctl.heading("DNS configuration", result.status.upper())]
+    rows.append(flipctl.rule())
+    for index, server in enumerate(data.get("nameservers", []), start=1):
+        rows.append(flipctl.pair(f"DNS {index}", server))
+    for domain in data.get("search_domains", []):
+        rows.append(flipctl.pair("Search", domain))
+    if data.get("local_stub"):
+        rows.append(flipctl.text("Local resolver stub; upstream servers not shown.", dim=True))
+    if not data.get("nameservers"):
+        rows.append(flipctl.text("No valid nameserver configured."))
+    for finding in result.findings:
+        rows.append(flipctl.text(finding.title))
+        if finding.detail:
+            rows.extend(flipctl.text(line) for line in flipctl.wrap(finding.detail))
+    for note in result.limitations:
+        rows.append(flipctl.text(note, dim=True))
+    rows.append(flipctl.pair("Saved", saved, dim=True))
+    state["detail_rows"] = rows
+    state["detail_refresh"] = show_dns
+    detail.show()
+
+
 def show_history():
     """Show the newest local diagnostic runs."""
     try:
@@ -149,9 +203,11 @@ def menu_items():
     return [
         flipctl.item("Interfaces", status=f"{count} found"),
         flipctl.item("Ethernet link", status=f"{ethernet_count} ports"),
+        flipctl.item("Default route", status="IPv4 / IPv6"),
+        flipctl.item("DNS config", status="Local"),
         flipctl.item("History", status="Local"),
         flipctl.item("Safe Mode", status="ON"),
-        flipctl.item("About", status="v0.1"),
+        flipctl.item("About", status="v0.2"),
     ]
 
 
@@ -187,7 +243,7 @@ def show_safe_mode():
 
 def show_about():
     state["detail_rows"] = [
-        flipctl.heading("Network Diagnostics", "v0.1"),
+        flipctl.heading("Network Diagnostics", "v0.2"),
         flipctl.text("Standalone Flipper One app."),
         flipctl.rule(),
         flipctl.pair("Control", "device keys"),
@@ -212,10 +268,14 @@ def open_selected(menu):
             link_menu.selected = 0
             link_menu.show()
         elif selected == 2:
-            show_history()
+            show_routes()
         elif selected == 3:
-            show_safe_mode()
+            show_dns()
         elif selected == 4:
+            show_history()
+        elif selected == 5:
+            show_safe_mode()
+        elif selected == 6:
             show_about()
     elif menu is link_menu:
         ports = ethernet_interfaces()
