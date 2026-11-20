@@ -42,3 +42,30 @@ def test_interfaces_command_saves_result_by_default(tmp_path, monkeypatch, capsy
     assert output["collector"] == "linux.ip_address"
     assert output["run_id"]
     assert database.exists()
+
+
+def test_link_command_saves_result_by_default(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "link-results.sqlite3"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["flipper-diag", "link", "eth0", "--db", str(database), "--json"],
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_link_status",
+        lambda interface: DiagnosticResult(
+            collector="linux.ethtool",
+            status="ok",
+            interface=interface,
+            data={"speed_mbps": 1000, "duplex": "full", "link_detected": True},
+        ),
+    )
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    assert output["interface"] == "eth0"
+    assert output["data"]["speed_mbps"] == 1000
+    assert output["run_id"]
+    assert database.exists()
