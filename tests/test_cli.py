@@ -307,3 +307,29 @@ def test_tcp_connect_cli_passes_single_target_and_port_authorization(
     assert kwargs["authorization"].ports == (443,)
     assert kwargs["timeout_seconds"] == 2
     assert output["run_id"] == "tcp-run-id"
+
+
+def test_neighbors_cli_saves_passive_inventory(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "neighbors.sqlite3"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["flipper-diag", "neighbors", "--db", str(database), "--json"],
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_neighbor_cache",
+        lambda: DiagnosticResult(
+            collector="linux.neighbor_cache",
+            status="ok",
+            data={"neighbors": [{"ip": "192.0.2.1"}], "count": 1, "usable_count": 1},
+        ),
+    )
+    monkeypatch.setattr(cli, "save_result", lambda *args: "neighbor-run-id")
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    assert output["collector"] == "linux.neighbor_cache"
+    assert output["data"]["count"] == 1
+    assert output["run_id"] == "neighbor-run-id"
