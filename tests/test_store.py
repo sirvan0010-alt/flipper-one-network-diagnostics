@@ -86,6 +86,31 @@ def test_v1_database_migrates_to_v2_without_losing_runs(tmp_path):
         PRAGMA user_version = 1;
         """
     )
+    connection.execute(
+        """
+        INSERT INTO diagnostic_runs
+            (run_id, collector, status, interface, schema_version, started_at, result_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            "legacy-run",
+            "legacy.collector",
+            "warning",
+            "eth0",
+            1,
+            "2026-01-01T00:00:00+00:00",
+            '{"collector":"legacy.collector","status":"warning","data":{}}',
+        ),
+    )
+    connection.execute(
+        """
+        INSERT INTO findings
+            (run_id, code, severity, title, detail, recommendation)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        ("legacy-run", "LEGACY-001", "warning", "Old finding", "Evidence", "Review"),
+    )
+    connection.commit()
     connection.close()
 
     initialize_database(database)
@@ -98,10 +123,89 @@ def test_v1_database_migrates_to_v2_without_losing_runs(tmp_path):
             "SELECT name FROM sqlite_master WHERE type = 'table'"
         )
     }
+    run = connection.execute(
+        "SELECT collector, status FROM diagnostic_runs WHERE run_id = 'legacy-run'"
+    ).fetchone()
+    finding = connection.execute(
+        "SELECT code, title FROM findings WHERE run_id = 'legacy-run'"
+    ).fetchone()
+    foreign_key_errors = connection.execute("PRAGMA foreign_key_check").fetchall()
     connection.close()
+
     assert version == 2
     assert "diagnostic_runs" in tables
     assert "inventory_baselines" in tables
+    assert run == ("legacy.collector", "warning")
+    assert finding == ("LEGACY-001", "Old finding")
+    assert foreign_key_errors == []
+
+
+def test_initial_schema_migration_rolls_back_on_failure(tmp_path):
+    database = tmp_path / "partial.sqlite3"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE name_collision (id INTEGER PRIMARY KEY);
+        CREATE INDEX idx_diagnostic_runs_started_at ON name_collision(id);
+        PRAGMA user_version = 0;
+        """
+    )
+    connection.close()
+
+    with pytest.raises(sqlite3.OperationalError, match="already exists"):
+        initialize_database(database)
+
+    connection = sqlite3.connect(database)
+    version = connection.execute("PRAGMA user_version").fetchone()[0]
+    tables = {
+        row[0]
+        for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+    }
+    connection.close()
+
+    assert version == 0
+    assert "diagnostic_runs" not in tables
+    assert "findings" not in tables
+
+
+def test_save_result_rolls_back_run_when_finding_insert_fails(tmp_path):
+    database = tmp_path / "atomic-save.sqlite3"
+    initialize_database(database)
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TRIGGER reject_findings
+        BEFORE INSERT ON findings
+        BEGIN
+            SELECT RAISE(ABORT, 'forced test failure');
+        END;
+        """
+    )
+    connection.close()
+
+    result = DiagnosticResult(
+        collector="fixture",
+        status="warning",
+        findings=[
+            Finding(
+                code="TEST-001",
+                severity="warning",
+                title="Forced failure",
+            )
+        ],
+    )
+    with pytest.raises(sqlite3.IntegrityError, match="forced test failure"):
+        save_result(database, result)
+
+    connection = sqlite3.connect(database)
+    run_count = connection.execute("SELECT COUNT(*) FROM diagnostic_runs").fetchone()[0]
+    finding_count = connection.execute("SELECT COUNT(*) FROM findings").fetchone()[0]
+    connection.close()
+
+    assert run_count == 0
+    assert finding_count == 0
 
 
 def test_save_and_load_named_baseline(tmp_path):
