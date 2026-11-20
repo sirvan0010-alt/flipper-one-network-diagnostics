@@ -117,7 +117,7 @@ def test_panel_menu_and_ethernet_flow_use_shared_core(monkeypatch):
     menu = namespace["main_menu"]
     assert menu.ran is True
     assert [item["label"] for item in menu.kwargs["items"]()] == [
-        "Interfaces", "Ethernet link", "Default route", "DNS config",
+        "Interfaces", "Ethernet link", "Local Check", "Default route", "DNS config",
         "History", "Safe Mode", "About"
     ]
 
@@ -183,14 +183,54 @@ def test_route_and_dns_screens_use_read_only_collectors(monkeypatch):
     menu = namespace["main_menu"]
     detail = namespace["detail"]
 
-    menu.selected = 2
+    menu.selected = 3
     assert menu.handler(FakeKey.OK) is True
     route_rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "Gateway" and row.get("value") == "192.0.2.1"
                for row in route_rows)
 
-    menu.selected = 3
+    menu.selected = 4
     assert menu.handler(FakeKey.OK) is True
     dns_rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "DNS 1" and row.get("value") == "192.0.2.53"
                for row in dns_rows)
+
+
+def test_local_check_panel_is_labelled_as_non_active(monkeypatch):
+    namespace = load_app(monkeypatch)
+    monkeypatch.setitem(
+        namespace,
+        "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address", status="ok", data={"interfaces": [], "count": 0}
+        ),
+    )
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+    monkeypatch.setitem(
+        namespace,
+        "collect_local_check",
+        lambda: DiagnosticResult(
+            collector="network.local_check",
+            status="warning",
+            interface="end0",
+            data={
+                "active_probes": False,
+                "component_status": {
+                    "interfaces": "ok",
+                    "link": "ok",
+                    "routes": "warning",
+                    "dns": "ok",
+                },
+            },
+        ),
+    )
+    namespace["main"]()
+    menu = namespace["main_menu"]
+    menu.selected = 2
+    assert menu.handler(FakeKey.OK) is True
+    rows = namespace["detail"].kwargs["rows"]()
+    assert any(row.get("label") == "Link" and row.get("value") == "ok" for row in rows)
+    assert any(
+        "no DHCP, DNS or gateway probes" in row.get("value", "")
+        for row in rows
+    )
