@@ -63,6 +63,7 @@ def test_local_check_combines_read_only_components(monkeypatch):
     assert result.data["active_probes"] is False
     assert result.data["component_status"] == {
         "interfaces": "ok",
+        "wired_interface": "available",
         "routes": "ok",
         "dns": "ok",
         "link": "ok",
