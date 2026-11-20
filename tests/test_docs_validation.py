@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from validate_docs import heading_slugs, unfenced_lines, validate
+from validate_docs import heading_slugs, unfenced_lines, validate  # noqa: E402
 
 
 def write_tree(root: Path, files: dict[str, str]) -> None:
