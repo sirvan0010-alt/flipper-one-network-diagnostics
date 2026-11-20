@@ -14,6 +14,7 @@ from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
 from .linux_routes import collect_default_routes
 from .local_check import collect_local_check
+from .linux_neighbors import collect_neighbor_cache
 from .ping import run_ping
 from .safety import ActiveAuthorization, ActiveOperationBlocked
 from .tcp_connect import run_tcp_connect
@@ -87,6 +88,13 @@ def main() -> None:
     dns.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     dns.add_argument("--no-save", action="store_true", help="do not store this result")
     dns.add_argument("--db", type=Path, default=default_database_path())
+
+    neighbors = subparsers.add_parser(
+        "neighbors", help="show cached IPv4/IPv6 neighbors without scanning"
+    )
+    neighbors.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    neighbors.add_argument("--no-save", action="store_true", help="do not store this result")
+    neighbors.add_argument("--db", type=Path, default=default_database_path())
 
     ping = subparsers.add_parser(
         "ping", help="send bounded ICMP probes to one explicitly authorized IP target"
@@ -247,6 +255,28 @@ def main() -> None:
         else:
             print(f"{result.collector} · status: {result.status}")
             print(json.dumps(result.data, indent=2, ensure_ascii=False))
+            for finding in result.findings:
+                print(f"{finding.severity}: {finding.title} — {finding.detail}")
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
+    elif args.command == "neighbors":
+        result = collect_neighbor_cache()
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"Neighbor cache · {result.status} · {result.data.get('count', 0)} entries")
+            for neighbor in result.data.get("neighbors", []):
+                print(
+                    f"{neighbor['ip']} · {neighbor.get('mac_address') or 'unknown MAC'} · "
+                    f"{neighbor.get('interface') or 'unknown interface'} · "
+                    f"{','.join(neighbor['state']) or 'unknown state'}"
+                )
             for finding in result.findings:
                 print(f"{finding.severity}: {finding.title} — {finding.detail}")
             if run_id:
