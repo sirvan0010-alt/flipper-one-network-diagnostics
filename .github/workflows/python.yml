@@ -96,3 +96,42 @@ jobs:
           python-version: "3.13"
       - name: Validate local Markdown links, images and anchors
         run: python scripts/validate_docs.py
+
+  debian-trixie-arm64:
+    # Closer userspace approximation to the Flipper One image; still not the device rootfs.
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: debian:trixie-slim
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install only the target image's base Python runtime
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3 ca-certificates
+          rm -rf /var/lib/apt/lists/*
+      - name: Verify Debian Trixie ARM64 and SQLite standard-library support
+        run: |
+          test "$(uname -m)" = "aarch64"
+          python3 -c "import platform, sqlite3; assert platform.machine() in ('aarch64', 'arm64'); c=sqlite3.connect(':memory:'); assert c.execute('select sqlite_version()').fetchone()[0]; print('Debian Trixie', platform.machine(), 'SQLite', sqlite3.sqlite_version)"
+      - name: Import core and exercise SQLite persistence
+        env:
+          PYTHONPATH: src
+        run: |
+          python3 -m compileall -q src apps scripts
+          python3 - <<'PY'
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+          from flipper_diag.store import initialize_database
+
+          with TemporaryDirectory() as directory:
+              database = Path(directory) / "results.sqlite3"
+              initialize_database(database)
+              assert database.is_file()
+              print("Debian Trixie core import and SQLite schema initialization passed")
+          PY
+      - name: Assemble FlipCTL bundle and import core without site packages
+        run: |
+          output="$(mktemp -d)/Network Diagnostics"
+          python3 scripts/package_flipctl_app.py --output "$output"
+          PYTHONPATH="$output" python3 -S -c "import importlib, pkgutil, flipper_diag; [importlib.import_module(m.name) for m in pkgutil.iter_modules(flipper_diag.__path__, 'flipper_diag.')]; print('Debian bundle imports:', flipper_diag.__version__)"
