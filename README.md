@@ -31,6 +31,7 @@ flipper-diag interfaces
 flipper-diag link eth0
 flipper-diag baseline save --name office --input inventory.json
 flipper-diag baseline compare --name office --input current-inventory.json
+python scripts/package_flipctl_app.py
 flipper-diag history
 flipper-diag history --json
 ```
@@ -38,6 +39,7 @@ flipper-diag history --json
 ## Architektura a vývoj před doručením zařízení
 
 - [Software strategy](docs/software-strategy.md) – standalone ovládání, technologie a integrace FlipCTL.
+- [FlipCTL app integration](docs/flipctl-app-integration.md) – sestavení a instalace aplikace přímo na Flipper One.
 - [Upstream watch](docs/upstream-watch.md) – sledované oficiální repozitáře a funkce, které nesmíme zbytečně duplikovat.
 - [Architecture](docs/architecture.md) – oddělení jádra, kolektorů, úložiště, API a prezentace.
 - [Data model](docs/data-model.md) – lokální SQLite a verzování schématu.
