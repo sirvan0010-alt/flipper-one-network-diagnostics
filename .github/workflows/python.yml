@@ -104,12 +104,12 @@ jobs:
       image: debian:trixie-slim
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install only the target image's base Python runtime
+      - name: Install Git and the target image's base Python runtime
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends python3 ca-certificates
+          apt-get install -y --no-install-recommends git python3 ca-certificates
           rm -rf /var/lib/apt/lists/*
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Verify Debian Trixie ARM64 and SQLite standard-library support
         run: |
           test "$(uname -m)" = "aarch64"
