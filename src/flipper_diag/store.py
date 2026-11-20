@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import uuid
 from datetime import datetime, timezone
@@ -29,6 +30,10 @@ def _connect(path: str | Path) -> sqlite3.Connection:
     db_path = Path(path).expanduser()
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
+    try:
+        os.chmod(db_path, 0o600)
+    except OSError:
+        pass
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
