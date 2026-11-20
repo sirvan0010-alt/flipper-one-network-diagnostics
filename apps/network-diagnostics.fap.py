@@ -5,9 +5,9 @@
 # ///
 """Local-first network diagnostics for the Flipper One panel.
 
-This first device UI is deliberately read-only: it inventories local interfaces,
-queries Ethernet link state, and stores results locally. It does not scan or probe
-other devices on the network.
+The device UI is deliberately read-only: it inventories local interfaces,
+Ethernet link state, default routes and resolver configuration, and stores results
+locally. Local Check combines these observations without sending network probes.
 """
 
 from __future__ import annotations
@@ -237,7 +237,7 @@ def menu_items():
         flipctl.item("DNS config", status="Local"),
         flipctl.item("History", status="Local"),
         flipctl.item("Safe Mode", status="ON"),
-        flipctl.item("About", status="v0.2"),
+        flipctl.item("About", status="v0.3"),
     ]
 
 
@@ -273,7 +273,7 @@ def show_safe_mode():
 
 def show_about():
     state["detail_rows"] = [
-        flipctl.heading("Network Diagnostics", "v0.2"),
+        flipctl.heading("Network Diagnostics", "v0.3"),
         flipctl.text("Standalone Flipper One app."),
         flipctl.rule(),
         flipctl.pair("Control", "device keys"),
