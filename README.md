@@ -28,6 +28,9 @@ python -m pip install -e ".[dev]"
 pytest
 flipper-diag doctor
 flipper-diag doctor --json
+flipper-diag interfaces --json
+flipper-diag routes --json
+flipper-diag dns --json
 flipper-diag interfaces
 flipper-diag link eth0
 flipper-diag baseline save --name office --input inventory.json
