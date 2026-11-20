@@ -33,7 +33,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
 | SQLite inventory baseline | Implementováno v2 | Pojmenované baseline, ukládání/načítání |
 | Linux interface inventory | Implementováno | Read-only `ip -j address show`; ověřeno parserem a mock testy |
-| Ethernet link status | Implementováno | Read-only `ethtool <interface>`; ověřeno parserem a mock testy; nástroj nemusí být v rootfs |
+| Ethernet link status | Implementováno | Read-only `ethtool <interface>` with `/sys/class/net` fallback; parser and sysfs mock tests; ethtool may be absent from rootfs |
 | IPv4/IPv6 default-route inventory | Implementováno | Read-only `ip -j route show default` a `ip -6 -j route show default`; mock testy |
 | Local DNS resolver configuration | Implementováno | Read-only parser `/etc/resolv.conf`; žádné DNS dotazy; mock testy |
 | Local readiness check | Implementováno | Aggregates interface, Ethernet link, default route and DNS configuration; no active probes; unit/UI/CLI tests |
