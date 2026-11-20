@@ -24,7 +24,7 @@ Běžné testy musí být možné spustit a vyhodnotit přímo na Flipper One be
 - **Core:** plánování úloh, politika safe mode, normalizace výsledků, pravidla nálezů.
 - **Storage:** SQLite, migrace schématu, baseline a historie; aktuální návrh je v [data-model.md](data-model.md).
 - **CLI/API:** přenositelné rozhraní mezi jádrem a prezentační vrstvou; lokální JSON výsledky.
-- **Presentation:** tenký FlipCTL app wrapper po ověření upstream API; primární ovládání na displeji Flipper One. Volitelně lokální web dashboard, TUI a export HTML/PDF/CSV.
+- **Presentation:** první cílová aplikace je Python `.fap.py` pro zdokumentované `flipctl` runtime z repozitáře `flipctl-slint`; její balíček obsahuje `flipper_diag` core vedle skriptu. Primární ovládání je displej a fyzické klávesy. Volitelně vzdálený panel, TUI a export HTML/PDF/CSV.
 
 ## Technologie – počáteční rozhodnutí
 
@@ -38,7 +38,7 @@ Python je zatím rozhodnutí pro přenositelné jádro a testy, nikoli potvrzen�
 - Přesné rozhraní mezi kolektory a prezentační vrstvou.
 - Způsob izolace privilegovaných síťových operací.
 - Model autentizace a zabezpečení volitelného lokálního web dashboardu.
-- Stabilní rozhraní FlipCTL pro externí aplikace a pluginy.
+- Změny dokumentovaného `.fap.py` API a Python runtime v `flipctl-slint`.
 - Potřeba druhého Wi-Fi adaptéru pro souběžné režimy.
 - Které oficiální síťové funkce Flipper OS budou dostupné jako nástroje/služby a které bude nutné doplnit.
 
@@ -54,4 +54,4 @@ Python je zatím rozhodnutí pro přenositelné jádro a testy, nikoli potvrzen�
 
 ## Kontrola upstream závislostí
 
-Před návrhem nové funkce projít [upstream-watch.md](upstream-watch.md). Rozlišovat dokumentovaný záměr, prototyp, sloučenou implementaci, ověření na cílovém HW a vydanou funkci.
+Před návrhem nové funkce projít [upstream-watch.md](upstream-watch.md). Rozlišovat dokumentovaný záměr, prototyp, sloučenou implementaci, ověření na cílovém HW a vydanou funkci. Pro UI používat aktuální dokumentovaný app contract z `flipctl-slint/docs/apps.md`; nepředpokládat, že starší `flipctl` architektonické návrhy jsou runtime API.
