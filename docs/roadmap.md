@@ -21,7 +21,7 @@ Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít r
 
 Detailní rozhodnutí pro všech 45 funkcí F-01 až F-45 je v [feature matrix](feature-matrix.md); upstream změny se evidují v [upstream watch](upstream-watch.md).
 
-CI evidence (2026-11-20): [run 44704974953](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44704974953) passed 124 tests on Python 3.10–3.13, Ruff checks and FlipCTL app packaging/upload. This is desktop/CI validation only; no Flipper One hardware or live network test has been performed.
+CI evidence (2026-11-20): [run 44705137712](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44705137712) passed 124 tests on Python 3.10–3.13, Ruff checks and FlipCTL app packaging/upload. This is desktop/CI validation only; no Flipper One hardware or live network test has been performed.
 
 Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
 
