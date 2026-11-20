@@ -14,6 +14,8 @@ from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
 from .linux_routes import collect_default_routes
 from .local_check import collect_local_check
+from .ping import run_ping
+from .safety import ActiveAuthorization
 from .store import (
     default_database_path,
     list_baselines,
@@ -84,6 +86,21 @@ def main() -> None:
     dns.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     dns.add_argument("--no-save", action="store_true", help="do not store this result")
     dns.add_argument("--db", type=Path, default=default_database_path())
+
+    ping = subparsers.add_parser(
+        "ping", help="send bounded ICMP probes to one explicitly authorized IP target"
+    )
+    ping.add_argument("--target", required=True, help="literal IPv4 or IPv6 address")
+    ping.add_argument("--scope", required=True, help="explicit authorized CIDR containing the target")
+    ping.add_argument(
+        "--confirm-active", action="store_true", required=True,
+        help="confirm that you are authorized to send ICMP to this target",
+    )
+    ping.add_argument("--count", type=int, default=3, help="number of echo requests (1–5)")
+    ping.add_argument("--timeout", type=int, default=1, help="per-request timeout in seconds (1–5)")
+    ping.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    ping.add_argument("--no-save", action="store_true", help="do not store this result")
+    ping.add_argument("--db", type=Path, default=default_database_path())
 
     history = subparsers.add_parser(
         "history", help="show locally stored diagnostic runs"
@@ -213,6 +230,35 @@ def main() -> None:
             print(json.dumps(envelope, indent=2, ensure_ascii=False))
         else:
             print(f"{result.collector} · status: {result.status}")
+            print(json.dumps(result.data, indent=2, ensure_ascii=False))
+            for finding in result.findings:
+                print(f"{finding.severity}: {finding.title} — {finding.detail}")
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
+    elif args.command == "ping":
+        authorization = ActiveAuthorization(
+            purpose="single-target ICMP echo diagnostic",
+            scope=args.scope,
+            targets=(args.target,),
+            confirmed=args.confirm_active,
+        )
+        result = run_ping(
+            args.target,
+            authorization=authorization,
+            safe_mode=not args.confirm_active,
+            count=args.count,
+            timeout_seconds=args.timeout,
+        )
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"ICMP ping · {args.target} · status: {result.status}")
             print(json.dumps(result.data, indent=2, ensure_ascii=False))
             for finding in result.findings:
                 print(f"{finding.severity}: {finding.title} — {finding.detail}")
