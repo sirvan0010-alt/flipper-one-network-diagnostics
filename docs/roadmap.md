@@ -19,6 +19,8 @@ Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít r
 
 ## Aktuální stav implementace (2026-11-20; aktualizováno po CI běhu)
 
+Detailní rozhodnutí pro všech 45 funkcí F-01 až F-45 je v [feature matrix](feature-matrix.md); upstream změny se evidují v [upstream watch](upstream-watch.md).
+
 Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
 
 | Oblast | Stav | Důkaz / omezení |
