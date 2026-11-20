@@ -32,7 +32,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | Safe Mode základ | Implementováno jako policy API | Zatím není napojen na aktivní síťové kolektory |
 | SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
 | SQLite inventory baseline | Implementováno v2 | Pojmenované baseline, ukládání/načítání |
-| Linux interface inventory | Implementováno | Read-only `ip -j address show`; ověřeno parserem a mock testy |
+| Linux interface inventory | Implementováno | Read-only `ip -j address show`; sysfs classification prevents Wi-Fi being treated as wired Ethernet; parser and mock tests |
 | Ethernet link status | Implementováno | Read-only `ethtool <interface>` with `/sys/class/net` fallback; parser and sysfs mock tests; ethtool may be absent from rootfs |
 | IPv4/IPv6 default-route inventory | Implementováno | Read-only `ip -j route show default` a `ip -6 -j route show default`; mock testy |
 | Local DNS resolver configuration | Implementováno | Read-only parser `/etc/resolv.conf`; žádné DNS dotazy; mock testy |
