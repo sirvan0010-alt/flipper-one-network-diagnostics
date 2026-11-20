@@ -14,7 +14,7 @@ A feature appearing in product documentation, a source tree or an App Manager ca
 
 | ID | Planned capability | Upstream overlap / dependency | Our action |
 |---|---|---|---|
-| F-01 | Wired AutoTest | Native link, route, discovery and standard Linux tools are available building blocks; no complete NetAlly-style guided result established | **Build** orchestration, pass/fail thresholds and explanation |
+| F-01 | Wired AutoTest | Native link, route, discovery and standard Linux tools are available building blocks; no complete NetAlly-style guided result established | **Partially implemented:** local-check aggregates local config only; **build next:** DHCP, DNS resolution, gateway and bounded active checks behind authorization |
 | F-02 | Profiles and test targets | FlipCTL provides app/menu framework, not our diagnostic profiles | **Build** local profile schema and target groups |
 | F-03 | Periodic AutoTest | No complete equivalent confirmed | **Build** scheduler and history; defer until core is stable |
 | F-04 | Switch test (CDP/LLDP/EDP) | lldpd is not explicitly listed in the reviewed rootfs manifest; native discovery may expose some data | **Verify first**, then integrate native LLDP/CDP or add a bounded parser |
@@ -69,6 +69,7 @@ The first implementation slice is intentionally passive and local:
 - link: read-only ethtool link data, if available.
 - routes: local IPv4/IPv6 default-route inventory.
 - dns: local resolver-file parsing; no DNS query.
+- local-check: aggregate local-only interface/link/route/DNS configuration; explicitly not a reachability test.
 - SQLite history and named inventory baselines.
 
 These are building blocks, not a complete AutoTest. No DHCP exchange, DNS resolution, gateway ping, TCP probe, active discovery, packet injection or port scan is run by these commands.
