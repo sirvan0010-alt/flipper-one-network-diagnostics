@@ -235,3 +235,45 @@ def test_local_check_flags_default_route_on_another_interface(monkeypatch):
     assert "ROUTE-DEFAULT-OTHER-INTERFACE" in {
         finding.code for finding in result.findings
     }
+
+
+def test_local_check_does_not_treat_wifi_as_wired_ethernet(monkeypatch):
+    monkeypatch.setattr(
+        local_check,
+        "collect_ip_interfaces",
+        lambda: _result(
+            "linux.ip_address",
+            data={
+                "interfaces": [
+                    {
+                        "name": "wlan0",
+                        "link_type": "ether",
+                        "wireless": True,
+                        "operstate": "UP",
+                        "addresses": [{"family": "inet", "local": "192.0.2.10"}],
+                    }
+                ]
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        local_check,
+        "collect_default_routes",
+        lambda: _result("linux.default_routes", data={"routes": []}),
+    )
+    monkeypatch.setattr(
+        local_check,
+        "collect_dns_config",
+        lambda: _result("linux.resolver_config", data={"nameservers": []}),
+    )
+    monkeypatch.setattr(
+        local_check,
+        "collect_link_status",
+        lambda interface: (_ for _ in ()).throw(AssertionError("Wi-Fi must not use Ethernet test")),
+    )
+
+    result = local_check.collect_local_check()
+
+    assert result.interface is None
+    assert result.data["component_status"]["link"] == "not_available"
+    assert "ETH-INTERFACE-NOT-FOUND" in {finding.code for finding in result.findings}
