@@ -134,3 +134,16 @@ def test_baseline_rejects_empty_name_and_invalid_inventory(tmp_path):
 
 def test_missing_baseline_returns_none(tmp_path):
     assert load_baseline(tmp_path / "results.sqlite3", "unknown") is None
+
+
+def test_database_file_is_owner_only_on_posix(tmp_path):
+    import os
+    import stat
+
+    if os.name != "posix":
+        pytest.skip("POSIX file mode semantics are required")
+    database = tmp_path / "private.sqlite3"
+    initialize_database(database)
+
+    mode = stat.S_IMODE(database.stat().st_mode)
+    assert mode == 0o600
