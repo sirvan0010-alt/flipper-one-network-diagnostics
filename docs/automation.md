@@ -1,15 +1,15 @@
 # CI/CD a bezpečnostní automatizace
 
-Stav: workflow soubory jsou přidány do vývojové větve. Aktivace na výchozí větvi nastane až po schválení a sloučení PR; do té doby se ověřují běhy vyvolané pull requestem.
+Stav: workflow soubory jsou přidány do vývojové větve. Python CI, CodeQL i Python security checks jsou nyní nakonfigurované také pro validační větev a PR do `pre-device-foundation`, takže je lze ověřit ještě před sloučením. Pravidelné běhy na výchozí větvi budou pokračovat po schválení a sloučení.
 
 ## Automatizace
 
 | Workflow | Spuštění | Účel |
 |---|---|---|
-| `Python checks` – x86_64 | push, PR, ručně, každé pondělí | Ubuntu 24.04 x64; testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
+| `Python checks` – x86_64 | push na `main`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | Ubuntu 24.04 x64; testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
 | `Python checks` – ARM64 | stejné události | Ubuntu 24.04 ARM64; nativní testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages |
-| `CodeQL security analysis` | push, PR, ručně, každé pondělí | Statická analýza Pythonu a GitHub Actions, sada `security-extended` |
-| `Python security checks` | push, PR, ručně, každé pondělí | `pip-audit`, Bandit pro nálezy vysoké závažnosti a kontrola kompilovatelnosti |
+| `CodeQL security analysis` | push na `main`/`pre-device-foundation`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | Statická analýza Pythonu a GitHub Actions, sada `security-extended` |
+| `Python security checks` | push na `main`/`pre-device-foundation`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | `pip-audit`, Bandit pro nálezy vysoké závažnosti a kontrola kompilovatelnosti |
 
 ARM64 job používá nativní GitHub-hosted runner `ubuntu-24.04-arm`, nikoli emulaci QEMU. Protože je repozitář veřejný, tento standardní runner je podle GitHubu dostupný pro veřejné projekty. Job ověřuje `aarch64`, spouští testy na ARM64, sestaví `py3-none-any` wheel, nainstaluje jej do čistého virtuálního prostředí bez indexu balíčků a provede read-only CLI/SQLite smoke test. Nakonec sestaví skutečný app adresář a importuje všechny jeho moduly v režimu Python `-S`, bez přístupu k vývojovému checkoutu a site-packages.
 
