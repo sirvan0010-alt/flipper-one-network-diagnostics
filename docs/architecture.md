@@ -46,6 +46,8 @@ Python je zatím rozhodnutí pro přenositelné jádro a testy, nikoli potvrzen�
 
 - Safe mode blokuje aktivní skeny, probe, DHCP požadavky iniciované diagnostikou a další vysílání, které není nezbytné pro pasivní příjem.
 - Každá aktivní úloha musí zobrazit rozsah, cíle a typ provozu před spuštěním.
+- Autorizační policy vyžaduje explicitní IP/CIDR rozsah, potvrzené cílové IP adresy uvnitř tohoto rozsahu a limit 256 cílů na jednu operaci; hostname nejsou povoleny.
+- Aktivní kolektory musí spouštět pevně sestavené argumentové seznamy bez shell interpolace a s timeoutem.
 - Výchozí rozsah nesmí být automaticky celá síť bez potvrzení uživatele.
 - Žádné automatické obcházení firewallů, autentizace ani přístupových kontrol.
 - Před spuštěním privilegovaného příkazu se používá allowlist příkazů a argumentů; neskládat shellové řetězce z uživatelského vstupu.
