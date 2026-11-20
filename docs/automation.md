@@ -6,8 +6,8 @@ Stav: workflow soubory jsou přidány do vývojové větve. Aktivace na výchoz�
 
 | Workflow | Spuštění | Účel |
 |---|---|---|
-| `Python checks` – x86_64 | push, PR, ručně, každé pondělí | Testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
-| `Python checks` – ARM64 | stejné události | Nativní ARM64 testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages |
+| `Python checks` – x86_64 | push, PR, ručně, každé pondělí | Ubuntu 24.04 x64; testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
+| `Python checks` – ARM64 | stejné události | Ubuntu 24.04 ARM64; nativní testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages |
 | `CodeQL security analysis` | push, PR, ručně, každé pondělí | Statická analýza Pythonu a GitHub Actions, sada `security-extended` |
 | `Python security checks` | push, PR, ručně, každé pondělí | `pip-audit`, Bandit pro nálezy vysoké závažnosti a kontrola kompilovatelnosti |
 
