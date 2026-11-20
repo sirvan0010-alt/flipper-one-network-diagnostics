@@ -12,11 +12,11 @@ from .models import DiagnosticResult, Finding
 def _select_ethernet_interface(
     interfaces: list[dict], routes: list[dict], requested: str | None
 ) -> str | None:
-    names = {
+    names = [
         item["name"]
         for item in interfaces
         if item.get("link_type") == "ether" and isinstance(item.get("name"), str)
-    }
+    ]
     if requested is not None:
         if requested not in names:
             raise ValueError("requested interface is not present in the Ethernet inventory")
