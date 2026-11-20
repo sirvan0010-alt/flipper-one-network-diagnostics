@@ -16,3 +16,31 @@ Podrobný backlog F-01 až F-45 a závazné podmínky jsou v kořenovém [AGENTS
 ## Pravidlo postupu
 
 Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít reprodukovatelné testy, zdokumentovaná omezení a důkaz běhu na cílové platformě.
+
+## Aktuální stav implementace (2026-11-20)
+
+Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
+
+| Oblast | Stav | Důkaz / omezení |
+|---|---|---|
+| Přenosný Python balíček a CLI | Implementováno | Instalace přes `pip install -e .`; běh v CI |
+| Read-only doctor | Implementováno | Inventura OS, rozhraní a dostupných nástrojů; negeneruje síťové pakety |
+| Výsledkový JSON kontrakt | Implementováno v1 | `DiagnosticResult` a `Finding` |
+| Safe Mode základ | Implementováno jako policy API | Zatím není napojen na aktivní síťové kolektory |
+| SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
+| SQLite inventory baseline | Implementováno v2 | Pojmenované baseline, ukládání/načítání |
+| Linux interface inventory | Implementováno | Read-only `ip -j address show`; ověřeno parserem a mock testy |
+| Ethernet link status | Implementováno | Read-only `ethtool <interface>`; ověřeno parserem a mock testy |
+| Inventory diff | Implementováno | Nová/chybějící zařízení, změna IP, duplicitní IP; vstupní pozorování musí dodat collector/import |
+| DHCP/DNS/gateway AutoTest | Nezahájeno | Vyžaduje samostatné testy a autorizaci pro aktivní síťový provoz |
+| LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
+| FlipCTL integrace | Blokováno stabilním API | Čeká na implementované a dokumentované upstream rozhraní |
+| Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici |
+
+### Co je potřeba před označením M3 za dokončený
+
+- CI musí projít celou podporovanou Python maticí.
+- Doplnit integrační testy databáze, migrací a CLI.
+- Připravit instalaci balíčku bez vývojových závislostí.
+- Ověřit runtime a spotřebu na podporované ARM64 Linux desce, později na Flipper One.
+- Uzavřít rozhraní pro FlipCTL až podle skutečného upstream API; neblokovat tím přenosné jádro.
