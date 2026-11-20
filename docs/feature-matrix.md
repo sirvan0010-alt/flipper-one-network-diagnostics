@@ -19,7 +19,7 @@ A feature appearing in product documentation, a source tree or an App Manager ca
 | F-03 | Periodic AutoTest | No complete equivalent confirmed | **Build** scheduler and history; defer until core is stable |
 | F-04 | Switch test (CDP/LLDP/EDP) | lldpd is not explicitly listed in the reviewed rootfs manifest; native discovery may expose some data | **Verify first**, then integrate native LLDP/CDP or add a bounded parser |
 | F-05 | VLAN detection | Native discovery/sniffer may expose VLAN evidence; published product feature mentions VLAN visibility | **Integrate** captured/observed VLAN evidence; do not invent unsupported PHY capability |
-| F-06 | Link speed and duplex | ethtool is not explicitly listed in the reviewed rootfs manifest | **Reuse** ethtool when present; add graceful missing-tool handling and verify PHY reports |
+| F-06 | Link speed and duplex | ethtool is not explicitly listed in the reviewed rootfs manifest | **Reuse** ethtool when present; fall back to kernel sysfs carrier/speed/duplex attributes when absent; verify PHY reports |
 | F-07 | LLDP PoE offered power | Depends on LLDP TLVs and switch support; not PoE load measurement | **Build** read-only TLV interpretation; never claim loaded PoE testing |
 | F-08 | Ping / TCP Connect / MTU | A Ping .fap.py app exists upstream; standard Linux tools are available | **Reuse** basic ping capability; **build** combined AutoTest thresholds, TCP and MTU workflow |
 | F-09 | HTTP / FTP response time | Standard protocols/tools exist; no integrated test workflow confirmed | **Build** bounded timing checks and result normalization |
