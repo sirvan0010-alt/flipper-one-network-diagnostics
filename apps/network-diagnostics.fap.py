@@ -20,6 +20,7 @@ from flipper_diag.linux_ethtool import collect_link_status
 from flipper_diag.linux_ip import collect_ip_interfaces
 from flipper_diag.linux_routes import collect_default_routes
 from flipper_diag.local_check import collect_local_check
+from flipper_diag.linux_neighbors import collect_neighbor_cache
 from flipper_diag.ping import run_ping
 from flipper_diag.safety import ActiveAuthorization
 from flipper_diag.tcp_connect import run_tcp_connect
@@ -37,6 +38,8 @@ state = {
     "last_saved": "",
     "confirm_rows": [],
     "pending_active_action": None,
+    "neighbors": [],
+    "neighbors_saved": "",
 }
 
 
@@ -223,6 +226,59 @@ def show_dns():
     state["detail_refresh"] = show_dns
     detail.show()
 
+
+
+
+def neighbor_menu_items():
+    items = []
+    for neighbor in state["neighbors"]:
+        mac = neighbor.get("mac_address") or "no MAC"
+        interface = neighbor.get("interface") or "unknown interface"
+        status = ",".join(neighbor.get("state", [])) or "unknown"
+        items.append(flipctl.item(neighbor["ip"], status=f"{mac} · {interface} · {status}"))
+    if not items:
+        items.append(flipctl.item("No cached neighbors", status="No scan performed"))
+    return items
+
+
+def show_neighbors():
+    result = collect_neighbor_cache()
+    state["neighbors"] = result.data.get("neighbors", [])
+    state["neighbors_saved"] = persist(result)
+    if not state["neighbors"]:
+        state["detail_rows"] = [
+            flipctl.heading("Known devices", "EMPTY"),
+            flipctl.text("The local kernel neighbor cache contains no entries."),
+            flipctl.text("This screen does not scan the LAN or send discovery packets."),
+            flipctl.pair("Saved", state["neighbors_saved"], dim=True),
+        ]
+        state["detail_refresh"] = show_neighbors
+        detail.show()
+        return
+    neighbor_menu.show()
+
+
+def show_neighbor_detail(index):
+    neighbors = state["neighbors"]
+    if not 0 <= index < len(neighbors):
+        return
+    neighbor = neighbors[index]
+    rows = [
+        flipctl.heading("Known device", ",".join(neighbor.get("state", [])) or "UNKNOWN"),
+        flipctl.rule(),
+        flipctl.pair("IP address", neighbor["ip"]),
+        flipctl.pair("Family", neighbor["family"]),
+        flipctl.pair("MAC", neighbor.get("mac_address") or "unknown"),
+        flipctl.pair("Interface", neighbor.get("interface") or "unknown"),
+        flipctl.pair("Usable cache entry", str(neighbor["usable"])),
+        flipctl.pair("Router flag", str(neighbor["router"])),
+        flipctl.rule(),
+        flipctl.text("Read from the local kernel cache only; no LAN scan was performed."),
+        flipctl.pair("Saved", state["neighbors_saved"], dim=True),
+    ]
+    state["detail_rows"] = rows
+    state["detail_refresh"] = lambda: show_neighbor_detail(index)
+    detail.show()
 
 
 def wired_gateway_route():
@@ -433,6 +489,7 @@ def menu_items():
         flipctl.item("Interfaces", status=f"{count} found"),
         flipctl.item("Ethernet link", status=f"{ethernet_count} ports"),
         flipctl.item("Local Check", status="No probes"),
+        flipctl.item("Known devices", status="Neighbor cache only"),
         flipctl.item("Ping wired gateway", status="3 ICMP requests"),
         flipctl.item("TCP gateway port", status="One port at a time"),
         flipctl.item("Default route", status="IPv4 / IPv6"),
@@ -503,19 +560,21 @@ def open_selected(menu):
         elif selected == 2:
             show_local_check()
         elif selected == 3:
-            show_ping_gateway_confirmation()
+            show_neighbors()
         elif selected == 4:
+            show_ping_gateway_confirmation()
+        elif selected == 5:
             tcp_port_menu.selected = 0
             tcp_port_menu.show()
-        elif selected == 5:
-            show_routes()
         elif selected == 6:
-            show_dns()
+            show_routes()
         elif selected == 7:
-            show_history()
+            show_dns()
         elif selected == 8:
-            show_safe_mode()
+            show_history()
         elif selected == 9:
+            show_safe_mode()
+        elif selected == 10:
             show_about()
     elif menu is link_menu:
         ports = ethernet_interfaces()
@@ -524,7 +583,7 @@ def open_selected(menu):
 
 
 def main():
-    global main_menu, link_menu, detail, history, confirm_detail, tcp_port_menu
+    global main_menu, link_menu, detail, history, confirm_detail, tcp_port_menu, neighbor_menu
 
     detail = flipctl.Detail(
         rows=lambda: state["detail_rows"],
@@ -556,6 +615,24 @@ def main():
             return True
         if key is flipctl.Key.RUN:
             run_confirmed_active_action()
+            return True
+        return False
+
+    neighbor_menu = flipctl.Menu(
+        items=neighbor_menu_items,
+        buttons=["Menu", "Refresh", "", "", "Open"],
+    )
+
+    @neighbor_menu.on_key
+    def neighbor_menu_keys(key):
+        if key is flipctl.Key.ESCAPE:
+            main_menu.show()
+            return True
+        if key is flipctl.Key.VIEW:
+            show_neighbors()
+            return True
+        if key in (flipctl.Key.OK, flipctl.Key.RUN):
+            show_neighbor_detail(neighbor_menu.selected)
             return True
         return False
 
