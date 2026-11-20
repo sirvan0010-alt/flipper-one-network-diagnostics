@@ -23,8 +23,14 @@ def _normalize_addresses(values: Any) -> tuple[str, ...]:
     normalized = set()
     for value in values:
         address = value.get("local") if isinstance(value, dict) else value
+        if not isinstance(address, str):
+            raise ValueError(f"invalid IP address in inventory: {address!r}")
         try:
-            parsed = ipaddress.ip_interface(address).ip if "/" in address else ipaddress.ip_address(address)
+            parsed = (
+                ipaddress.ip_interface(address).ip
+                if "/" in address
+                else ipaddress.ip_address(address)
+            )
             normalized.add(str(parsed))
         except (ValueError, TypeError) as exc:
             raise ValueError(f"invalid IP address in inventory: {address!r}") from exc
