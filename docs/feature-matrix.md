@@ -1,4 +1,4 @@
-# Feature matrix F-01–F-52: reuse vs. build
+# Feature matrix F-01–F-57: reuse vs. build
 
 Last reviewed: 2026-11-20. The authoritative backlog remains in [AGENTS.md](../AGENTS.md); detailed behavior and acceptance criteria are in [functional specification](functional-specification.md). This document decides where our implementation should live.
 
@@ -66,7 +66,7 @@ A feature appearing in product documentation, a source tree or an App Manager ca
 | F-49 | Authorized LF/HF workflow | Official PM5 client command tree and antenna support | **Verify first** on PM5; own/lab media only; UHF excluded until supported |
 | F-50 | RFID capture/analysis/export | Official capture/sniff/trace and analysis commands | **Verify first**; bounded capture and protected sensitive artifacts |
 | F-51 | Test-tag write/verify/emulation | PM5 command capabilities, high-risk RF writes | **Defer** until separate safety review and lab hardware tests |
-| F-52 | Read-only automotive CAN capture | External CAN transceiver and separate automotive bus scope | **Defer** to M7; receive-only; no CAN TX or ECU modification |
+| F-52 | Adapter-neutral read-only automotive CAN capture | WiCAN PRO owned by user; future adapters remain possible | **Integrate** generic RX-only contract; WiCAN PRO is first planned adapter; M7 |\n| F-53 | WiCAN PRO discovery/capabilities | MeatPi Wi-Fi/BLE/USB and firmware-specific interfaces | **Verify first** exact firmware/API; manual endpoint selection; fail closed on unknown versions |\n| F-54 | WiCAN PRO passive CAN stream | Candidate Wi-Fi TCP/SLCAN, GVRET, BLE; protocol support varies by firmware | **Verify first** stable 4.x stream; receive-only parser; prove zero TX; no broad scan |\n| F-55 | WiCAN PRO capture import/export | SD/local logging and candidate candump/ASC/BLF/MDF4 formats | **Integrate/build** only verified formats; preserve raw artifact, checksum and provenance |\n| F-56 | AutoDiag evidence interoperability | Existing AutoDiag-WiCAN-Pro and AutoDiag-WiCAN-Diagnostic-Data projects; autodiag-can-capture-v1 | **Reuse/integrate** versioned contract and evidence packs; do not copy Kotlin runtime/classifier/scorer |\n| F-57 | CAN observation analysis/timeline | Existing AutoDiag PERIODIC/EVENT/MIXED classifier, counter filtering and M2 scorer | **Build** basic frame-rate/periodicity/gap timeline; keep advanced automotive analysis in AutoDiag |
 
 ## External repository reuse review
 
@@ -115,7 +115,7 @@ Active test authorization and current CLI boundaries are documented in [active-t
 Hardware and upstream implementation status must be rechecked at the commit/tag being integrated. This matrix is not proof of feature availability on a shipped device.
 
 
-## Proxmark5 upstream references
+## WiCAN PRO upstream references\n\n- [MeatPi WiCAN PRO product](https://www.meatpi.com/products/wican-pro/)\n- [MeatPi WiCAN PRO manual and firmware-version warning](https://docs.meatpi.com/wican-pro/)\n- [MeatPi WiCAN PRO datasheet](https://docs.meatpi.com/wican-pro/hardware/datasheet/)\n- [MeatPi WiCAN firmware](https://github.com/meatpiHQ/wican-fw)\n- [WiCAN PRO app transports](https://docs.meatpi.com/wican-pro/send-data/apps/)\n\nThe current MeatPi docs warn that firmware 6.0 is beta and stable 4.52 uses a different legacy manual; v6 API pages must not be applied to 4.x. The user's installed version is not yet known. See [WiCAN PRO integration specification](wican-pro-integration.md) for firmware gates, RX-only constraints and AutoDiag interoperability.\n\n## Proxmark5 upstream references
 
 - [Iceman PM5 BWM usage](https://github.com/RfidResearchGroup/proxmark3/blob/master/doc/md/PM5_Start_Here/PM5-BWM-USAGE.md)
 - [Iceman command reference](https://github.com/RfidResearchGroup/proxmark3/blob/master/doc/commands.md)
