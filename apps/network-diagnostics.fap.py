@@ -597,7 +597,11 @@ def main():
     @detail.on_key
     def detail_keys(key):
         if key is flipctl.Key.ESCAPE:
-            main_menu.show()
+            back = state.pop("detail_back", None)
+            if back:
+                back()
+            else:
+                main_menu.show()
             return True
         if key is flipctl.Key.VIEW and state["detail_refresh"]:
             state["detail_refresh"]()
