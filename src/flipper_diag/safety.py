@@ -55,13 +55,13 @@ def require_active_allowed(
         raise ActiveOperationBlocked("Scope must be a valid IP address or CIDR network.") from exc
 
     normalized_targets = set()
-    for target in authorization.targets:
-        if not isinstance(target, str) or not target.strip():
+    for authorized_target in authorization.targets:
+        if not isinstance(authorized_target, str) or not authorized_target.strip():
             raise ActiveOperationBlocked(
                 "Targets must be non-empty literal IPv4 or IPv6 address strings."
             )
         try:
-            address = ipaddress.ip_address(target)
+            address = ipaddress.ip_address(authorized_target)
         except ValueError as exc:
             raise ActiveOperationBlocked(
                 "Targets must be literal IPv4 or IPv6 addresses; hostnames are not accepted."
