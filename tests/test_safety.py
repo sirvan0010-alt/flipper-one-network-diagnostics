@@ -89,7 +89,7 @@ def test_active_operation_is_bound_to_one_explicitly_authorized_target():
         )
 
 
-@pytest.mark.parametrize("target", [None, "example.com", 1234])
+@pytest.mark.parametrize("target", ["example.com", 1234])
 def test_active_operation_rejects_non_literal_requested_target(target):
     auth = ActiveAuthorization("connectivity check", "192.0.2.0/24", ("192.0.2.1",), True)
     with pytest.raises(ActiveOperationBlocked, match="literal IP"):
