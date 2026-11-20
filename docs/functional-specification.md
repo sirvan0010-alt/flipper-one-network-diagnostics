@@ -239,10 +239,29 @@ Optional lab workflow for blank test media or user-created profiles, with dry-ru
 - Do not automatically flash PM5/BWM firmware from this app.
 - Bulk transfer over BLE/Wi-Fi may be slower than USB and have streaming limitations.
 
-## 10. Optional automotive CAN adapter — F-52
+## 10. Optional automotive CAN integration — F-52 to F-57
 
-### F-52 — Read-only automotive CAN capture
-Optional separate lab/bench module inspired by CAN capture and black-box evidence practices in Flipper Tesla projects. Capture/timestamp frames, show IDs/rates and export traces. Decoding requires a validated signal database and applicability metadata. Requires external CAN transceiver/interface; no assumption that Flipper One has a compatible ready-made adapter. Receive-only by design: no frame injection/replay/spoofing, ECU writes, steering/braking/powertrain control or driver-assistance modification. M7 only; isolated bench acceptance first, including bitrate, timestamps, errors and bus-off behavior. Do not connect to road vehicle until electrical isolation/safety independently reviewed.
+WiCAN PRO is an owned accessory and the primary planned CAN adapter. Its exact firmware and transport remain to be verified. The detailed contract is in [WiCAN PRO integration specification](wican-pro-integration.md). Keep this module separate from the network MVP and from Proxmark5.
+
+### F-52 — Adapter-neutral read-only automotive CAN capture
+Generic receive-only CAN capture contract with WiCAN PRO as the first planned adapter. Keep transport and storage independent of the adapter model. No CAN TX, injection, replay, spoofing, fuzzing, ECU writes or vehicle-control changes. M7 optional.
+
+### F-53 — WiCAN PRO discovery and capability report
+Connect to a manually selected/configured endpoint and report model, firmware, transport and verified capabilities. Do not assume firmware APIs or scan broad networks. Unknown firmware fails closed.
+
+### F-54 — WiCAN PRO passive CAN stream
+Consume a firmware-version-pinned receive stream (candidate Wi-Fi TCP/SLCAN first; GVRET or BLE only after verification). Bounded buffers, backpressure, cancellation, reconnect handling and dropped-frame reporting. No transmit/control path exposed.
+
+### F-55 — WiCAN PRO capture import/export
+Import/export supported local capture artifacts with checksums, timestamps and provenance. candump/ASC/BLF/MDF4 are candidates only where format support is verified against the installed firmware and parser.
+
+### F-56 — AutoDiag evidence interoperability
+Reuse the existing `autodiag-can-capture-v1` contract and evidence packs where compatible. Do not duplicate AutoDiag-WiCAN-Pro Kotlin runtime, vehicle profiles, classifier or scorer. Version any schema extension.
+
+### F-57 — CAN observation analysis and timeline
+Basic frame-rate, periodicity, burst/gap and event-window summaries with drill-down to raw evidence. Existing PERIODIC/EVENT/MIXED classification, counter filtering and automotive scoring remain in AutoDiag unless explicitly ported from a stable specification. Temporal correlation is not causation.
+
+**Deferred:** active OBD PID polling, UDS requests, DTC clearing, J2534, ECU programming and any CAN transmission. These capabilities exist in the wider WiCAN ecosystem but violate the current passive-only integration boundary.
 
 ## 11. Repository reuse review
 
