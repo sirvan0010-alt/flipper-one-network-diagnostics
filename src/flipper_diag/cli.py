@@ -15,7 +15,7 @@ from .linux_ip import collect_ip_interfaces
 from .linux_routes import collect_default_routes
 from .local_check import collect_local_check
 from .ping import run_ping
-from .safety import ActiveAuthorization
+from .safety import ActiveAuthorization, ActiveOperationBlocked
 from .store import (
     default_database_path,
     list_baselines,
@@ -244,13 +244,16 @@ def main() -> None:
             targets=(args.target,),
             confirmed=args.confirm_active,
         )
-        result = run_ping(
-            args.target,
-            authorization=authorization,
-            safe_mode=not args.confirm_active,
-            count=args.count,
-            timeout_seconds=args.timeout,
-        )
+        try:
+            result = run_ping(
+                args.target,
+                authorization=authorization,
+                safe_mode=not args.confirm_active,
+                count=args.count,
+                timeout_seconds=args.timeout,
+            )
+        except (ActiveOperationBlocked, ValueError) as exc:
+            parser.error(str(exc))
         run_id = None if args.no_save else save_result(args.db, result)
         envelope = result.to_dict()
         if run_id:
