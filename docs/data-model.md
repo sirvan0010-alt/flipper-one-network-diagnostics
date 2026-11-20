@@ -68,7 +68,7 @@ flipper-diag baseline list
 
 ## Migration policy
 
-SQLite `PRAGMA user_version` tracks the schema version. Version 2 adds `inventory_baselines` without rewriting existing diagnostic runs. New migrations must be sequential and tested against:
+SQLite `PRAGMA user_version` tracks the schema version. Version 2 adds `inventory_baselines` without rewriting existing diagnostic runs. Migrations run under a single SQLite `BEGIN IMMEDIATE` transaction; a failed migration rolls back the entire schema change. Result envelopes and their normalized findings are inserted in one transaction. Tests cover preservation of v1 runs/findings, rollback of a failed initial migration, and atomic result writes. New migrations must be sequential and tested against:
 1. an empty database;
 2. a database at the immediately previous schema version;
 3. a database with a newer version (must fail closed, never downgrade or rewrite).
