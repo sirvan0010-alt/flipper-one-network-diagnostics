@@ -30,6 +30,10 @@ from flipper_diag.store import (
     save_result,
 )
 
+class ActiveTestAborted(RuntimeError):
+    """A user-confirmed active test was invalidated before any traffic was sent."""
+
+
 state = {
     "interfaces": [],
     "detail_rows": [],
@@ -285,7 +289,11 @@ def show_neighbor_detail(index):
 
 
 def wired_gateway_route():
-    """Return the default route that uses a confirmed wired Ethernet interface."""
+    """Return the current default route that uses a confirmed wired Ethernet interface."""
+    # Refresh the interface inventory here rather than trusting the menu's cached
+    # snapshot. This function is also called immediately before an active test.
+    interface_result = collect_ip_interfaces()
+    state["interfaces"] = interface_result.data.get("interfaces", [])
     wired_names = {item["name"] for item in ethernet_interfaces()}
     result = collect_default_routes()
     candidates = []
@@ -309,6 +317,20 @@ def wired_gateway_route():
         )
     )
     return candidates[0] if candidates else None
+
+
+def require_unchanged_gateway_route(target, interface):
+    """Abort an active test if its confirmed gateway or wired interface changed."""
+    current = wired_gateway_route()
+    if (
+        current is None
+        or current.get("gateway") != target
+        or current.get("device") != interface
+    ):
+        raise ActiveTestAborted(
+            "The wired default route changed after confirmation. "
+            "Reopen the test and review the new target before sending traffic."
+        )
 
 
 def show_active_confirmation(title, target, interface, description, action):
@@ -364,8 +386,10 @@ def run_confirmed_active_action():
         result, title = action()
     except Exception as exc:
         state["detail_rows"] = [
-            flipctl.heading("Active test failed", "ERROR"),
-            flipctl.text(type(exc).__name__),
+            flipctl.heading("Active test stopped", "ERROR"),
+            flipctl.text(
+                str(exc) if isinstance(exc, ActiveTestAborted) else type(exc).__name__
+            ),
             flipctl.text("No retry was attempted."),
         ]
         state["detail_refresh"] = None
@@ -389,6 +413,7 @@ def show_ping_gateway_confirmation():
     target = route["gateway"]
     interface = route.get("device") or "-"
     def action():
+        require_unchanged_gateway_route(target, interface)
         address = ipaddress.ip_address(target)
         prefix = 32 if address.version == 4 else 128
         authorization = ActiveAuthorization(
@@ -438,6 +463,7 @@ def show_tcp_gateway_confirmation(port):
     target = route["gateway"]
     interface = route.get("device") or "-"
     def action():
+        require_unchanged_gateway_route(target, interface)
         address = ipaddress.ip_address(target)
         prefix = 32 if address.version == 4 else 128
         authorization = ActiveAuthorization(

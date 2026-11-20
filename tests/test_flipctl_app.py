@@ -327,6 +327,31 @@ def test_ping_gateway_requires_on_device_confirmation(monkeypatch):
     assert namespace["detail"].shown is True
 
 
+def test_cancelled_ping_confirmation_sends_no_packets(monkeypatch):
+    namespace = load_app(monkeypatch)
+    calls = []
+    monkeypatch.setitem(
+        namespace, "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address", status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    monkeypatch.setitem(namespace, "collect_default_routes", _wired_default_route)
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+    monkeypatch.setitem(
+        namespace, "run_ping",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+    namespace["main"]()
+    namespace["main_menu"].selected = 4
+    namespace["main_menu"].handler(FakeKey.OK)
+
+    assert namespace["confirm_detail"].handler(FakeKey.ESCAPE) is True
+    assert calls == []
+    assert "pending_active_action" not in namespace
+
+
 def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypatch):
     namespace = load_app(monkeypatch)
     calls = []
@@ -375,6 +400,89 @@ def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypa
     assert kwargs["safe_mode"] is False
     assert kwargs["authorization"].targets == ("192.0.2.1",)
     assert kwargs["authorization"].ports == (443,)
+
+
+
+
+
+def test_ping_confirmation_aborts_if_gateway_changes_before_confirm(monkeypatch):
+    namespace = load_app(monkeypatch)
+    calls = []
+    monkeypatch.setitem(
+        namespace, "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address", status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    routes = [
+        _wired_default_route(),
+        DiagnosticResult(
+            collector="linux.default_routes", status="ok",
+            data={"routes": [{
+                "family": "inet", "device": "end0",
+                "gateway": "192.0.2.254", "metric": 100,
+            }]},
+        ),
+    ]
+    monkeypatch.setitem(namespace, "collect_default_routes", lambda: routes.pop(0))
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+    monkeypatch.setitem(
+        namespace, "run_ping",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+    namespace["main"]()
+    namespace["main_menu"].selected = 4
+    namespace["main_menu"].handler(FakeKey.OK)
+    namespace["confirm_detail"].handler(FakeKey.RUN)
+
+    assert calls == []
+    rows = namespace["detail"].kwargs["rows"]()
+    assert any(
+        "default route changed after confirmation" in row.get("value", "")
+        for row in rows
+    )
+
+
+def test_tcp_confirmation_aborts_if_wired_interface_changes_before_confirm(monkeypatch):
+    namespace = load_app(monkeypatch)
+    calls = []
+    monkeypatch.setitem(
+        namespace, "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address", status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    routes = [
+        _wired_default_route(),
+        DiagnosticResult(
+            collector="linux.default_routes", status="ok",
+            data={"routes": [{
+                "family": "inet", "device": "end1",
+                "gateway": "192.0.2.1", "metric": 100,
+            }]},
+        ),
+    ]
+    monkeypatch.setitem(namespace, "collect_default_routes", lambda: routes.pop(0))
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+    monkeypatch.setitem(
+        namespace, "run_tcp_connect",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+    namespace["main"]()
+    namespace["main_menu"].selected = 5
+    namespace["main_menu"].handler(FakeKey.OK)
+    namespace["tcp_port_menu"].selected = 2
+    namespace["tcp_port_menu"].handler(FakeKey.OK)
+    namespace["confirm_detail"].handler(FakeKey.RUN)
+
+    assert calls == []
+    rows = namespace["detail"].kwargs["rows"]()
+    assert any(
+        "default route changed after confirmation" in row.get("value", "")
+        for row in rows
+    )
 
 
 def test_known_devices_menu_shows_only_cached_neighbors(monkeypatch):

@@ -333,3 +333,38 @@ def test_neighbors_cli_saves_passive_inventory(tmp_path, monkeypatch, capsys):
     assert output["collector"] == "linux.neighbor_cache"
     assert output["data"]["count"] == 1
     assert output["run_id"] == "neighbor-run-id"
+
+
+def test_cli_saved_result_is_retrievable_from_history(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "end-to-end.sqlite3"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["flipper-diag", "interfaces", "--db", str(database), "--json"],
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="fixture.interfaces",
+            status="ok",
+            data={"interfaces": [{"name": "end0"}], "count": 1},
+        ),
+    )
+
+    cli.main()
+    saved = json.loads(capsys.readouterr().out)
+    assert saved["run_id"]
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["flipper-diag", "history", "--db", str(database), "--json"],
+    )
+    cli.main()
+    history = json.loads(capsys.readouterr().out)
+
+    assert len(history) == 1
+    assert history[0]["run_id"] == saved["run_id"]
+    assert history[0]["collector"] == "fixture.interfaces"
+    assert history[0]["data"]["interfaces"] == [{"name": "end0"}]

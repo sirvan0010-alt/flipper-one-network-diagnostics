@@ -1,6 +1,6 @@
-# Feature matrix F-01–F-45: reuse vs. build
+# Feature matrix F-01–F-57: reuse vs. build
 
-Last reviewed: 2026-11-20. The authoritative descriptions and original scope remain in [AGENTS.md](../AGENTS.md). This document decides where our implementation should live.
+Last reviewed: 2026-11-20. The authoritative backlog remains in [AGENTS.md](../AGENTS.md); detailed behavior and acceptance criteria are in [functional specification](functional-specification.md). This document decides where our implementation should live.
 
 **Status vocabulary**
 
@@ -58,7 +58,28 @@ A feature appearing in product documentation, a source tree or an App Manager ca
 | F-42 | Remote control | FlipCTL already has web/desktop remote-control concepts | **Reuse** platform remote control; do not implement VNC/control server |
 | F-43 | Import/export settings | No complete diagnostic-profile format confirmed | **Build** versioned local JSON import/export |
 | F-44 | Safe Mode | No assumption that platform UI policy equals our operation authorization | **Build** fail-closed operation policy in our core and expose state in app |
-| F-45 | Proxmark5 integration | External USB device and protocol support are not confirmed | **Defer** to M7; require device/firmware and USB enumeration tests |
+| F-45 | Proxmark5 connection/orchestration | Official Iceman client; USB baseline, BWM wireless transports need exact firmware verification | **Defer/verify first** to M7; do not reimplement PM3 protocol |
+
+| F-46 | PM5 Wi-Fi transport | BWM Wi-Fi STA + TCP server and official TCP client transport; plain TCP security boundary | **Verify first** on exact BWM firmware; isolated LAN only, no WAN exposure |
+| F-47 | PM5 BLE transport | BWM GATT forwarding; native Linux BLE transport or bridge; pairing documentation needs reconciliation | **Verify first** on exact firmware; disable control if unauthenticated plaintext |
+| F-48 | PM5 status/battery | Official hw status/BWM telemetry commands | **Build** read-only adapter after transport verified |
+| F-49 | Authorized LF/HF workflow | Official PM5 client command tree and antenna support | **Verify first** on PM5; own/lab media only; UHF excluded until supported |
+| F-50 | RFID capture/analysis/export | Official capture/sniff/trace and analysis commands | **Verify first**; bounded capture and protected sensitive artifacts |
+| F-51 | Test-tag write/verify/emulation | PM5 command capabilities, high-risk RF writes | **Defer** until separate safety review and lab hardware tests |
+| F-52 | Adapter-neutral read-only automotive CAN capture | WiCAN PRO owned by user; future adapters remain possible | **Integrate** generic RX-only contract; WiCAN PRO is first planned adapter; M7 |
+| F-53 | WiCAN PRO discovery/capabilities | MeatPi Wi-Fi/BLE/USB and firmware-specific interfaces | **Verify first** exact firmware/API; manual endpoint selection; fail closed on unknown versions |
+| F-54 | WiCAN PRO passive CAN stream | Candidate Wi-Fi TCP/SLCAN, GVRET, BLE; protocol support varies by firmware | **Verify first** stable 4.x stream; receive-only parser; prove zero TX; no broad scan |
+| F-55 | WiCAN PRO capture import/export | SD/local logging and candidate candump/ASC/BLF/MDF4 formats | **Integrate/build** only verified formats; preserve raw artifact, checksum and provenance |
+| F-56 | AutoDiag evidence interoperability | Existing AutoDiag-WiCAN-Pro and AutoDiag-WiCAN-Diagnostic-Data projects; autodiag-can-capture-v1 | **Reuse/integrate** versioned contract and evidence packs; do not copy Kotlin runtime/classifier/scorer |
+| F-57 | CAN observation analysis/timeline | Existing AutoDiag PERIODIC/EVENT/MIXED classifier, counter filtering and M2 scorer | **Build** basic frame-rate/periodicity/gap timeline; keep advanced automotive analysis in AutoDiag |
+
+## External repository reuse review
+
+- [hypery11/flipper-tesla-fsd](https://github.com/hypery11/flipper-tesla-fsd): only CAN capture, timestamping, capability detection, host-side test fixtures and black-box evidence patterns may inform optional F-52. Exclude FSD unlock, nag suppression, CAN injection/replay and vehicle-control changes.
+- [teslamotors/buildroot](https://github.com/teslamotors/buildroot): no direct code reuse; the current target plan uses Debian/Flipper OS packages, not Tesla's Buildroot fork.
+- [Lunars/tesla](https://github.com/Lunars/tesla): exclude; rooted legacy MCU1/Tegra Model S/X scripts are outside product scope.
+- [Zeratul-X/web-tracing-analysis](https://github.com/Zeratul-X/web-tracing-analysis): dashboard timeline/trend/drill-down ideas only; do not import its Spring Boot/MySQL service into an offline-first app.
+- [Zeratul-X/three-scope-map-skill](https://github.com/Zeratul-X/three-scope-map-skill): exclude; geographic Earth/China map is not a network topology graph.
 
 ## Current implementation slice
 
@@ -97,3 +118,22 @@ Active test authorization and current CLI boundaries are documented in [active-t
 - [Upstream overlap register](upstream-watch.md)
 
 Hardware and upstream implementation status must be rechecked at the commit/tag being integrated. This matrix is not proof of feature availability on a shipped device.
+
+
+## WiCAN PRO upstream references
+
+- [MeatPi WiCAN PRO product](https://www.meatpi.com/products/wican-pro/)
+- [MeatPi WiCAN PRO manual and firmware-version warning](https://docs.meatpi.com/wican-pro/)
+- [MeatPi WiCAN PRO datasheet](https://docs.meatpi.com/wican-pro/hardware/datasheet/)
+- [MeatPi WiCAN firmware](https://github.com/meatpiHQ/wican-fw)
+- [WiCAN PRO app transports](https://docs.meatpi.com/wican-pro/send-data/apps/)
+
+The current MeatPi docs warn that firmware 6.0 is beta and stable 4.52 uses a different legacy manual; v6 API pages must not be applied to 4.x. The user's installed version is not yet known. See [WiCAN PRO integration specification](wican-pro-integration.md) for firmware gates, RX-only constraints and AutoDiag interoperability.
+
+## Proxmark5 upstream references
+
+- [Iceman PM5 BWM usage](https://github.com/RfidResearchGroup/proxmark3/blob/master/doc/md/PM5_Start_Here/PM5-BWM-USAGE.md)
+- [Iceman command reference](https://github.com/RfidResearchGroup/proxmark3/blob/master/doc/commands.md)
+- [PM5 getting started](https://github.com/RfidResearchGroup/proxmark3/blob/master/doc/md/PM5_Start_Here/Getting_Started_With_PM5.md)
+
+The BWM guide documents Wi-Fi STA/TCP and BLE GATT forwarding. It describes plain TCP and no BLE bonding, while the command reference lists pairing/passkey controls. This discrepancy must be tested against the exact firmware before enabling wireless control. Full UX, safety and acceptance contracts are in [functional-specification.md](functional-specification.md).

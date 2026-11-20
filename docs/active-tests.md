@@ -51,6 +51,7 @@ The on-device Known devices screen reads the local kernel IPv4/IPv6 neighbor cac
 - The parser supports the tested iputils and BusyBox summary formats; target output must be verified.
 - The Flipper app uses only the detected wired default gateway and a preset port list (53, 80, 443, 22), because the reviewed Python FlipCTL API does not expose free-form text input.
 - Each action requires the user to open a confirmation screen and press the explicit Confirm soft key. Cancel sends nothing. There is no global Safe Mode disable.
+- Immediately before sending, the app refreshes the wired interface inventory and default route. If the gateway or interface differs from the values shown on the confirmation screen, the action is aborted and the user must reopen and review the test.
 - Link-local IPv6 gateways are skipped until the active collectors support an explicit interface/scope ID.
 - The on-device flow is unit-tested with mocked sockets/subprocesses, but physical key/display behavior is not yet hardware-validated.
 - No live ping was performed during development; tests mock subprocess execution.
