@@ -1,8 +1,8 @@
 """Read-only host capability inventory; sends no network packets."""
 
 import platform
-import shutil
 import socket
+import shutil
 import sys
 
 
