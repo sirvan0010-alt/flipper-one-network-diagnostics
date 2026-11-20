@@ -349,7 +349,7 @@ def test_cancelled_ping_confirmation_sends_no_packets(monkeypatch):
 
     assert namespace["confirm_detail"].handler(FakeKey.ESCAPE) is True
     assert calls == []
-    assert namespace["pending_active_action"] is None
+    assert "pending_active_action" not in namespace
 
 
 def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypatch):
