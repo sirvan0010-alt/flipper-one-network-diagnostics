@@ -186,6 +186,13 @@ def main() -> None:
         else:
             print(f"{result.collector} · status: {result.status}")
             print(json.dumps(result.data.get("component_status", {}), indent=2))
+            assessment = result.data.get("assessment", {})
+            print(assessment.get("summary", "No assessment available."))
+            for cause in assessment.get("likely_causes", []):
+                print(
+                    "Likely cause "
+                    f"({cause['confidence']}): {cause['title']}"
+                )
             for finding in result.findings:
                 print(f"{finding.severity}: {finding.title} — {finding.detail}")
             if run_id:
