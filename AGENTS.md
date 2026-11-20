@@ -199,13 +199,15 @@ Tato tabulka má přednost před původním plánem, pokud se funkce překrývá
 
 | Naše ID | Oficiální schopnost / rozhraní | Rozhodnutí projektu |
 |---|---|---|
-| F-08 | FlipCTL wrappers pro ping a standardní CLI nástroje | Použít dostupný systémový nástroj nebo oficiální wrapper; vlastní bude AutoTest orchestrace, prahy a interpretace |
+| F-08 | `flipctl-slint` obsahuje `apps/ping.fap.py` a Python Runtime app | Nepřepisovat samostatný ping UI; pro AutoTest použít systémový ICMP nástroj nebo ověřený wrapper a přidat korelaci/práh v našem jádře |
 | F-11 | Oficiálně popsané pasivní/aktivní LAN Discovery | Nepřepisovat discovery engine bez důkazu mezery; integrovat výsledky a doplnit vrstvenou diagnostiku |
 | F-13 | FlipCTL wrapper pro traceroute | Reuse traceroute; vlastní bude korelace trasy se SNMP/LLDP a vysvětlení problémů |
 | F-15 | Flipper OS Network Sniffer profil a systémové nástroje | Znovu použít dostupný capture stack; vlastní bude diagnostické filtrování, souhrny a vazba na nálezy |
 | F-16 | Oficiálně popsaný Ethernet MitM Sniffer | Nevytvářet druhý transparentní bridge/capture engine; ověřit nativní implementaci a navázat analýzou PCAP |
 | F-34 | FlipCTL wrapper pro Nmap | Použít oficiální wrapper, pokud je v cílovém systému dostupný; vlastní bude bezpečná autorizace, profil a interpretace výsledků |
-| F-41/F-42 | FlipCTL frontend pro displej, Web UI a další ovládání | Primární UI stavět jako tenký app wrapper; nevyvíjet konkurenční remote-control framework |
+| F-41/F-42 | `flipctl-slint` dokumentuje Python/JS `.fap.py` aplikace, AppImage bundles a vestavěné ovládání displejem/klávesami | Naši aplikaci dodat jako FlipCTL hosted app; nevyvíjet vlastní HMI ani remote-control framework |
 | F-05 | Publikovaná produktová specifikace zmiňuje VLAN detekci | Nejdříve ověřit, co skutečně poskytuje Flipper OS; naši část omezit na normalizaci, evidenci a diagnostické vyhodnocení |
+
+První integrační cíl je `flipctl-slint/docs/apps.md` a Python Runtime (`provides = "py"`). Jeho `.fap.py` API je veřejně dokumentované, ale větev `dev` se mění; před releasem ověřit konkrétní commit. `apps/Test Tools/ethernet-tester.fap.py` je experimentální test nástroj s nedokumentovanými RTL8211F registry a známou kolizí s kernel MII pollingem; nekopírovat jej ani nepovažovat za bezpečný kabelový tester.
 
 Stavy upstream funkce se vždy zapisují jednou z kategorií: **zdokumentovaný záměr**, **prototyp**, **sloučený kód**, **ověřeno na cílovém HW**, **vydáno**. Pouhé uvedení na produktové stránce neznamená hotovou funkci.
