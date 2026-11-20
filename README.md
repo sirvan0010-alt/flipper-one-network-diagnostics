@@ -23,6 +23,8 @@ python -m pip install -e ".[dev]"
 pytest
 flipper-diag doctor
 flipper-diag doctor --json
+flipper-diag history
+flipper-diag history --json
 ```
 
 ## Architektura a vývoj před doručením zařízení
@@ -30,6 +32,7 @@ flipper-diag doctor --json
 - [Software strategy](docs/software-strategy.md) – standalone ovládání, technologie a integrace FlipCTL.
 - [Upstream watch](docs/upstream-watch.md) – sledované oficiální repozitáře a funkce, které nesmíme zbytečně duplikovat.
 - [Architecture](docs/architecture.md) – oddělení jádra, kolektorů, úložiště, API a prezentace.
+- [Data model](docs/data-model.md) – lokální SQLite a verzování schématu.
 - [Verification register](docs/verification.md) – evidence skutečných hardwarových testů.
 - [Roadmap](docs/roadmap.md) – milníky M0–M7.
 - [AGENTS.md](AGENTS.md) – úplný backlog F-01 až F-45 a závazná pravidla.
