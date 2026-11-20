@@ -29,12 +29,12 @@ Do not execute this against a network unless you own it or have explicit permiss
 ## TCP Connect example
 
 ```bash
-flipper-diag tcp-connect \\
-  --target 192.0.2.1 \\
-  --port 443 \\
-  --scope 192.0.2.1/32 \\
-  --confirm-active \\
-  --timeout 3 \\
+flipper-diag tcp-connect \
+  --target 192.0.2.1 \
+  --port 443 \
+  --scope 192.0.2.1/32 \
+  --confirm-active \
+  --timeout 3 \
   --json
 ```
 
