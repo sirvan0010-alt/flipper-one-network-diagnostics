@@ -69,3 +69,49 @@ def test_link_command_saves_result_by_default(tmp_path, monkeypatch, capsys):
     assert output["data"]["speed_mbps"] == 1000
     assert output["run_id"]
     assert database.exists()
+
+
+def test_baseline_cli_save_and_compare(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "baseline.sqlite3"
+    original = tmp_path / "original.json"
+    current = tmp_path / "current.json"
+    original.write_text(
+        json.dumps([{"mac_address": "02:00:00:00:00:01", "addresses": ["192.0.2.10"]}]),
+        encoding="utf-8",
+    )
+    current.write_text(
+        json.dumps(
+            [
+                {"mac_address": "02:00:00:00:00:01", "addresses": ["192.0.2.11"]},
+                {"mac_address": "02:00:00:00:00:02", "addresses": ["192.0.2.20"]},
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "baseline", "save", "--name", "office",
+            "--input", str(original), "--db", str(database), "--json",
+        ],
+    )
+    cli.main()
+    saved = json.loads(capsys.readouterr().out)
+    assert saved["device_count"] == 1
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "baseline", "compare", "--name", "office",
+            "--input", str(current), "--db", str(database), "--json",
+        ],
+    )
+    cli.main()
+    findings = json.loads(capsys.readouterr().out)
+    assert [item["code"] for item in findings] == [
+        "INVENTORY-NEW-DEVICE",
+        "INVENTORY-ADDRESS-CHANGED",
+    ]
