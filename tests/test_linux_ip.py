@@ -67,3 +67,16 @@ def test_collector_reports_missing_iproute2(monkeypatch):
 
     assert result.status == "error"
     assert result.findings[0].code == "COLLECTOR-TOOL-MISSING"
+
+
+def test_sysfs_classifies_wireless_and_wired_interfaces(tmp_path, monkeypatch):
+    wired = tmp_path / "end0"
+    wireless = tmp_path / "wlan0"
+    wired.mkdir()
+    wireless.mkdir()
+    (wireless / "wireless").mkdir()
+    monkeypatch.setattr(linux_ip, "SYS_CLASS_NET", tmp_path)
+
+    assert linux_ip._is_wireless_interface("end0") is False
+    assert linux_ip._is_wireless_interface("wlan0") is True
+    assert linux_ip._is_wireless_interface("missing0") is None
