@@ -46,3 +46,10 @@ def test_collector_handles_missing_file(tmp_path):
     result = linux_dns.collect_dns_config(tmp_path / "missing")
     assert result.status == "error"
     assert result.findings[0].code == "DNS-CONFIG-UNAVAILABLE"
+
+
+def test_last_search_or_domain_directive_replaces_previous_list():
+    parsed = linux_dns.parse_resolv_conf(
+        "search first.example second.example\\ndomain final.example\\n"
+    )
+    assert parsed["search"] == ["final.example"]
