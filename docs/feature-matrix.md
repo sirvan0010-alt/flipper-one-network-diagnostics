@@ -21,7 +21,7 @@ A feature appearing in product documentation, a source tree or an App Manager ca
 | F-05 | VLAN detection | Native discovery/sniffer may expose VLAN evidence; published product feature mentions VLAN visibility | **Integrate** captured/observed VLAN evidence; do not invent unsupported PHY capability |
 | F-06 | Link speed and duplex | ethtool is not explicitly listed in the reviewed rootfs manifest | **Reuse** ethtool when present; fall back to kernel sysfs carrier/speed/duplex attributes when absent; verify PHY reports |
 | F-07 | LLDP PoE offered power | Depends on LLDP TLVs and switch support; not PoE load measurement | **Build** read-only TLV interpretation; never claim loaded PoE testing |
-| F-08 | Ping / TCP Connect / MTU | A Ping .fap.py app exists upstream; standard Linux tools are available | **Partially implemented:** one-target ICMP CLI behind explicit authorization; reuse native Ping UI; build integrated AutoTest, TCP and MTU workflow |
+| F-08 | Ping / TCP Connect / MTU | A Ping .fap.py app exists upstream; standard Linux tools are available | **Partially implemented:** one-target ICMP and one-port TCP CLI behind explicit per-invocation authorization; reuse native Ping UI; build integrated AutoTest and MTU workflow |
 | F-09 | HTTP / FTP response time | Standard protocols/tools exist; no integrated test workflow confirmed | **Build** bounded timing checks and result normalization |
 | F-10 | Wired Discovery | Official Flipper product docs describe LAN discovery | **Integrate** native inventory and enrich/persist; avoid competing scanner |
 | F-11 | Layered LAN discovery | Official product docs describe passive and active discovery | **Reuse/integrate** native discovery; our app controls authorization and presents stages |
