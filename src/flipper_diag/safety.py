@@ -9,6 +9,7 @@ class ActiveOperationBlocked(PermissionError):
 
 
 MAX_AUTHORIZED_TARGETS = 256
+MAX_AUTHORIZED_PORTS = 64
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,7 @@ class ActiveAuthorization:
     scope: str
     targets: tuple[str, ...]
     confirmed: bool
+    ports: tuple[int, ...] = ()
 
 
 def require_active_allowed(
@@ -30,6 +32,7 @@ def require_active_allowed(
     safe_mode: bool = True,
     authorization: ActiveAuthorization | None = None,
     target: str | None = None,
+    port: int | None = None,
 ) -> None:
     """Fail closed unless an operator confirms a bounded IP-only scope."""
     if safe_mode is not False:
@@ -85,4 +88,27 @@ def require_active_allowed(
         if requested_target not in normalized_targets:
             raise ActiveOperationBlocked(
                 "The requested target is not included in the explicit authorization target list."
+            )
+
+    if port is not None:
+        if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+            raise ActiveOperationBlocked("The requested TCP port must be an integer from 1 to 65535.")
+        if not isinstance(authorization.ports, tuple) or not authorization.ports:
+            raise ActiveOperationBlocked("An explicit authorized TCP port list is required.")
+        if len(authorization.ports) > MAX_AUTHORIZED_PORTS:
+            raise ActiveOperationBlocked(
+                f"At most {MAX_AUTHORIZED_PORTS} ports may be authorized per operation."
+            )
+        for authorized_port in authorization.ports:
+            if (
+                not isinstance(authorized_port, int)
+                or isinstance(authorized_port, bool)
+                or not 1 <= authorized_port <= 65535
+            ):
+                raise ActiveOperationBlocked("Authorized ports must be integers from 1 to 65535.")
+        if len(set(authorization.ports)) != len(authorization.ports):
+            raise ActiveOperationBlocked("Duplicate authorized ports are not allowed.")
+        if port not in authorization.ports:
+            raise ActiveOperationBlocked(
+                "The requested TCP port is not included in the explicit authorization port list."
             )
