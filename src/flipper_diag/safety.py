@@ -1,0 +1,114 @@
+"""Fail-closed authorization policy for future active network operations."""
+
+import ipaddress
+from dataclasses import dataclass
+
+
+class ActiveOperationBlocked(PermissionError):
+    """Raised when an active operation lacks explicit bounded authorization."""
+
+
+MAX_AUTHORIZED_TARGETS = 256
+MAX_AUTHORIZED_PORTS = 64
+
+
+@dataclass(frozen=True, slots=True)
+class ActiveAuthorization:
+    """Explicit authorization for targets inside one IP network scope.
+
+    The scope must be an IP address or CIDR network. Targets must be literal
+    IP addresses inside that network; hostnames are intentionally not accepted.
+    """
+
+    purpose: str
+    scope: str
+    targets: tuple[str, ...]
+    confirmed: bool
+    ports: tuple[int, ...] = ()
+
+
+def require_active_allowed(
+    *,
+    safe_mode: bool = True,
+    authorization: ActiveAuthorization | None = None,
+    target: str | None = None,
+    port: int | None = None,
+) -> None:
+    """Fail closed unless an operator confirms a bounded IP-only scope."""
+    if safe_mode is not False:
+        raise ActiveOperationBlocked("Safe Mode is enabled; active operation blocked.")
+    if authorization is None:
+        raise ActiveOperationBlocked("Explicit authorization is required.")
+    if authorization.confirmed is not True:
+        raise ActiveOperationBlocked("The operator has not confirmed this test.")
+    if not isinstance(authorization.purpose, str) or not authorization.purpose.strip():
+        raise ActiveOperationBlocked("A non-empty test purpose must be specified.")
+    if not isinstance(authorization.scope, str) or not authorization.scope.strip():
+        raise ActiveOperationBlocked("An explicit IP network scope must be specified.")
+    if not isinstance(authorization.targets, tuple) or not authorization.targets:
+        raise ActiveOperationBlocked("At least one explicit target is required.")
+    if len(authorization.targets) > MAX_AUTHORIZED_TARGETS:
+        raise ActiveOperationBlocked(
+            f"At most {MAX_AUTHORIZED_TARGETS} targets may be authorized per operation."
+        )
+
+    try:
+        network = ipaddress.ip_network(authorization.scope, strict=False)
+    except ValueError as exc:
+        raise ActiveOperationBlocked("Scope must be a valid IP address or CIDR network.") from exc
+
+    normalized_targets = set()
+    for authorized_target in authorization.targets:
+        if not isinstance(authorized_target, str) or not authorized_target.strip():
+            raise ActiveOperationBlocked(
+                "Targets must be non-empty literal IPv4 or IPv6 address strings."
+            )
+        try:
+            address = ipaddress.ip_address(authorized_target)
+        except ValueError as exc:
+            raise ActiveOperationBlocked(
+                "Targets must be literal IPv4 or IPv6 addresses; hostnames are not accepted."
+            ) from exc
+        if address not in network:
+            raise ActiveOperationBlocked(
+                f"Target {address} is outside the explicitly authorized scope {network}."
+            )
+        normalized_targets.add(address)
+
+    if len(normalized_targets) != len(authorization.targets):
+        raise ActiveOperationBlocked("Duplicate targets are not allowed.")
+
+    if target is not None:
+        if not isinstance(target, str) or not target.strip():
+            raise ActiveOperationBlocked("The requested target must be a literal IP address.")
+        try:
+            requested_target = ipaddress.ip_address(target)
+        except ValueError as exc:
+            raise ActiveOperationBlocked("The requested target must be a literal IP address.") from exc
+        if requested_target not in normalized_targets:
+            raise ActiveOperationBlocked(
+                "The requested target is not included in the explicit authorization target list."
+            )
+
+    if port is not None:
+        if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+            raise ActiveOperationBlocked("The requested TCP port must be an integer from 1 to 65535.")
+        if not isinstance(authorization.ports, tuple) or not authorization.ports:
+            raise ActiveOperationBlocked("An explicit authorized TCP port list is required.")
+        if len(authorization.ports) > MAX_AUTHORIZED_PORTS:
+            raise ActiveOperationBlocked(
+                f"At most {MAX_AUTHORIZED_PORTS} ports may be authorized per operation."
+            )
+        for authorized_port in authorization.ports:
+            if (
+                not isinstance(authorized_port, int)
+                or isinstance(authorized_port, bool)
+                or not 1 <= authorized_port <= 65535
+            ):
+                raise ActiveOperationBlocked("Authorized ports must be integers from 1 to 65535.")
+        if len(set(authorization.ports)) != len(authorization.ports):
+            raise ActiveOperationBlocked("Duplicate authorized ports are not allowed.")
+        if port not in authorization.ports:
+            raise ActiveOperationBlocked(
+                "The requested TCP port is not included in the explicit authorization port list."
+            )

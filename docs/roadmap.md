@@ -16,3 +16,42 @@ Podrobný backlog F-01 až F-45 a závazné podmínky jsou v kořenovém [AGENTS
 ## Pravidlo postupu
 
 Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít reprodukovatelné testy, zdokumentovaná omezení a důkaz běhu na cílové platformě.
+
+## Aktuální stav implementace (2026-11-20; aktualizováno po CI běhu)
+
+Detailní rozhodnutí pro všech 45 funkcí F-01 až F-45 je v [feature matrix](feature-matrix.md); upstream změny se evidují v [upstream watch](upstream-watch.md).
+
+CI evidence (2026-11-20): [run 44746918230](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918230) passed 126 tests on Python 3.10–3.13, Ruff checks and FlipCTL app packaging/upload. [Security run 44746918286](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918286) passed pip-audit, high-severity Bandit and Python compilation. [CodeQL run 44746918047](https://github.com/sirvan0010-alt/flipper-one-network-diagnostics/actions/runs/44746918047) completed successfully. This is desktop/CI validation only; no Flipper One hardware or live network test has been performed.
+
+Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
+
+| Oblast | Stav | Důkaz / omezení |
+|---|---|---|
+| Přenosný Python balíček a CLI | Implementováno | Instalace přes `pip install -e .`; běh v CI |
+| Read-only doctor | Implementováno | Inventura OS, rozhraní a dostupných nástrojů; negeneruje síťové pakety |
+| FlipCTL Python app | Prototyp implementován | `apps/network-diagnostics.fap.py` + package builder; cílový běh na Flipperu zatím neověřen |
+| Výsledkový JSON kontrakt | Implementováno v1 | `DiagnosticResult` a `Finding` |
+| Safe Mode základ | Implementováno jako policy API | Zatím není napojen na aktivní síťové kolektory |
+| SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
+| SQLite inventory baseline | Implementováno v2 | Pojmenované baseline, ukládání/načítání |
+| Linux interface inventory | Implementováno | Read-only `ip -j address show`; sysfs classification prevents Wi-Fi being treated as wired Ethernet; parser and mock tests |
+| Ethernet link status | Implementováno | Read-only `ethtool <interface>` with `/sys/class/net` fallback; parser and sysfs mock tests; ethtool may be absent from rootfs |
+| IPv4/IPv6 default-route inventory | Implementováno | Read-only `ip -j route show default` a `ip -6 -j route show default`; mock testy |
+| Local DNS resolver configuration | Implementováno | Read-only parser `/etc/resolv.conf`; žádné DNS dotazy; mock testy |
+| Local readiness check | Implementováno | Aggregates interface, Ethernet link, default route and DNS configuration; no active probes; unit/UI/CLI tests |
+| Passive neighbor inventory | Implementováno | Read-only IPv4/IPv6 kernel neighbor cache; no discovery packets; CLI and on-device Known devices screen |
+| Evidence-bounded problem engine | Částečně implementováno | Local Check reports observations and cautious likely causes; root cause is never marked confirmed |
+| Inventory diff | Implementováno | Nová/chybějící zařízení, změna IP, duplicitní IP; vstupní pozorování musí dodat collector/import |
+| DHCP/DNS/gateway AutoTest | Částečně připraveno | Local Check combines local config; one-target ICMP and single-port TCP commands exist in CLI and behind on-device confirmation; DHCP lease/offer, DNS resolution and full wired AutoTest UI are not yet implemented |
+| LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
+| FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
+| Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
+
+### Co je potřeba před označením M3 za dokončený
+
+- CI musí projít celou podporovanou Python maticí.
+- Doplnit integrační testy databáze, migrací a CLI.
+- Na cílovém zařízení ověřit Python Runtime, import balíčku vedle `.fap.py` skriptu, zobrazení menu, mapování kláves a zápis SQLite.
+- Připravit instalaci balíčku bez vývojových závislostí.
+- Ověřit runtime a spotřebu na podporované ARM64 Linux desce, později na Flipper One.
+- Uzavřít rozhraní pro FlipCTL až podle skutečného upstream API; neblokovat tím přenosné jádro.
