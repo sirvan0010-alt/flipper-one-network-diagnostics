@@ -161,3 +161,30 @@ def test_baseline_cli_save_and_compare(tmp_path, monkeypatch, capsys):
         "INVENTORY-NEW-DEVICE",
         "INVENTORY-ADDRESS-CHANGED",
     ]
+
+
+def test_local_check_command_saves_read_only_aggregate(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "local-check.sqlite3"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["flipper-diag", "local-check", "--db", str(database), "--json"],
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_local_check",
+        lambda interface=None: DiagnosticResult(
+            collector="network.local_check",
+            status="ok",
+            interface=interface,
+            data={"active_probes": False, "component_status": {"routes": "ok"}},
+        ),
+    )
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    assert output["collector"] == "network.local_check"
+    assert output["data"]["active_probes"] is False
+    assert output["run_id"]
+    assert database.exists()
