@@ -499,7 +499,7 @@ def menu_items():
         flipctl.item("DNS config", status="Local"),
         flipctl.item("History", status="Local"),
         flipctl.item("Safe Mode", status="ON"),
-        flipctl.item("About", status="v0.6"),
+        flipctl.item("About", status="v0.7"),
     ]
 
 
@@ -536,7 +536,7 @@ def show_safe_mode():
 
 def show_about():
     state["detail_rows"] = [
-        flipctl.heading("Network Diagnostics", "v0.6"),
+        flipctl.heading("Network Diagnostics", "v0.7"),
         flipctl.text("Designed for standalone Flipper One use."),
         flipctl.rule(),
         flipctl.pair("Control", "device keys"),
