@@ -27,7 +27,8 @@ flipper-diag doctor --json
 
 ## Architektura a vývoj před doručením zařízení
 
-- [Software strategy](docs/software-strategy.md) – co lze vyvíjet bez Flipper One, rozhodnutí o Pythonu a plán integrace FlipCTL.
+- [Software strategy](docs/software-strategy.md) – standalone ovládání, technologie a integrace FlipCTL.
+- [Upstream watch](docs/upstream-watch.md) – sledované oficiální repozitáře a funkce, které nesmíme zbytečně duplikovat.
 - [Architecture](docs/architecture.md) – oddělení jádra, kolektorů, úložiště, API a prezentace.
 - [Verification register](docs/verification.md) – evidence skutečných hardwarových testů.
 - [Roadmap](docs/roadmap.md) – milníky M0–M7.
