@@ -2,13 +2,33 @@
 
 import argparse
 import json
+import sqlite3
+from dataclasses import asdict
 from pathlib import Path
 
 from . import __version__
+from .baseline import compare_device_inventory
 from .doctor import collect_doctor_report
 from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
-from .store import default_database_path, list_results, save_result
+from .store import (
+    default_database_path,
+    list_baselines,
+    list_results,
+    load_baseline,
+    save_baseline,
+    save_result,
+)
+
+
+def _read_inventory(path: Path, parser: argparse.ArgumentParser) -> list[dict]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        parser.error(f"cannot read inventory JSON: {exc}")
+    if not isinstance(payload, list):
+        parser.error("inventory JSON root must be an array of device objects")
+    return payload
 
 
 def main() -> None:
@@ -51,6 +71,30 @@ def main() -> None:
         default=default_database_path(),
         help="SQLite database path",
     )
+
+    baseline = subparsers.add_parser(
+        "baseline", help="manage local device inventory baselines"
+    )
+    baseline_commands = baseline.add_subparsers(
+        dest="baseline_command", required=True
+    )
+    baseline_save = baseline_commands.add_parser("save", help="save an inventory JSON file")
+    baseline_save.add_argument("--name", required=True)
+    baseline_save.add_argument("--input", required=True, type=Path)
+    baseline_save.add_argument("--json", action="store_true")
+    baseline_save.add_argument("--db", type=Path, default=default_database_path())
+
+    baseline_compare = baseline_commands.add_parser(
+        "compare", help="compare an inventory JSON file with a saved baseline"
+    )
+    baseline_compare.add_argument("--name", required=True)
+    baseline_compare.add_argument("--input", required=True, type=Path)
+    baseline_compare.add_argument("--json", action="store_true")
+    baseline_compare.add_argument("--db", type=Path, default=default_database_path())
+
+    baseline_list = baseline_commands.add_parser("list", help="list saved baselines")
+    baseline_list.add_argument("--json", action="store_true")
+    baseline_list.add_argument("--db", type=Path, default=default_database_path())
 
     args = parser.parse_args()
     if args.command == "doctor":
@@ -120,6 +164,35 @@ def main() -> None:
                     f"{item['collector']}  {item.get('interface') or '-'}  "
                     f"{item['run_id']}"
                 )
+    elif args.command == "baseline":
+        if args.baseline_command == "save":
+            devices = _read_inventory(args.input, parser)
+            try:
+                baseline_id = save_baseline(args.db, args.name, devices)
+            except sqlite3.IntegrityError:
+                parser.error("a baseline with this name already exists")
+            output = {"baseline_id": baseline_id, "name": args.name, "device_count": len(devices)}
+            print(json.dumps(output, indent=2) if args.json else
+                  f"Saved baseline '{args.name}' with {len(devices)} devices.")
+        elif args.baseline_command == "compare":
+            saved = load_baseline(args.db, args.name)
+            if saved is None:
+                parser.error(f"baseline '{args.name}' does not exist")
+            current = _read_inventory(args.input, parser)
+            findings = compare_device_inventory(saved["devices"], current)
+            output = [asdict(item) for item in findings]
+            if args.json:
+                print(json.dumps(output, indent=2, ensure_ascii=False))
+            elif not findings:
+                print(f"No inventory differences against baseline '{args.name}'.")
+            else:
+                for finding in findings:
+                    print(f"{finding.severity}: {finding.title} — {finding.detail}")
+        elif args.baseline_command == "list":
+            items = list_baselines(args.db)
+            print(json.dumps(items, indent=2, ensure_ascii=False) if args.json else
+                  "\n".join(f"{item['name']} · {item['created_at']}" for item in items)
+                  or "No baselines saved.")
 
 
 if __name__ == "__main__":
