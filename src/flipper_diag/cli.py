@@ -16,6 +16,7 @@ from .linux_routes import collect_default_routes
 from .local_check import collect_local_check
 from .ping import run_ping
 from .safety import ActiveAuthorization, ActiveOperationBlocked
+from .tcp_connect import run_tcp_connect
 from .store import (
     default_database_path,
     list_baselines,
@@ -101,6 +102,21 @@ def main() -> None:
     ping.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     ping.add_argument("--no-save", action="store_true", help="do not store this result")
     ping.add_argument("--db", type=Path, default=default_database_path())
+
+    tcp = subparsers.add_parser(
+        "tcp-connect", help="attempt one authorized TCP handshake to one IP and port"
+    )
+    tcp.add_argument("--target", required=True, help="literal IPv4 or IPv6 address")
+    tcp.add_argument("--port", required=True, type=int, help="one explicitly authorized TCP port")
+    tcp.add_argument("--scope", required=True, help="explicit authorized CIDR containing the target")
+    tcp.add_argument(
+        "--confirm-active", action="store_true", required=True,
+        help="confirm that you are authorized to connect to this target and port",
+    )
+    tcp.add_argument("--timeout", type=int, default=3, help="connect timeout in seconds (1–5)")
+    tcp.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    tcp.add_argument("--no-save", action="store_true", help="do not store this result")
+    tcp.add_argument("--db", type=Path, default=default_database_path())
 
     history = subparsers.add_parser(
         "history", help="show locally stored diagnostic runs"
@@ -262,6 +278,39 @@ def main() -> None:
             print(json.dumps(envelope, indent=2, ensure_ascii=False))
         else:
             print(f"ICMP ping · {args.target} · status: {result.status}")
+            print(json.dumps(result.data, indent=2, ensure_ascii=False))
+            for finding in result.findings:
+                print(f"{finding.severity}: {finding.title} — {finding.detail}")
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
+    elif args.command == "tcp-connect":
+        authorization = ActiveAuthorization(
+            purpose="single-target single-port TCP diagnostic",
+            scope=args.scope,
+            targets=(args.target,),
+            confirmed=args.confirm_active,
+            ports=(args.port,),
+        )
+        try:
+            result = run_tcp_connect(
+                args.target,
+                args.port,
+                authorization=authorization,
+                safe_mode=not args.confirm_active,
+                timeout_seconds=args.timeout,
+            )
+        except (ActiveOperationBlocked, ValueError) as exc:
+            parser.error(str(exc))
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"TCP connect · {args.target}:{args.port} · status: {result.status}")
             print(json.dumps(result.data, indent=2, ensure_ascii=False))
             for finding in result.findings:
                 print(f"{finding.severity}: {finding.title} — {finding.detail}")
