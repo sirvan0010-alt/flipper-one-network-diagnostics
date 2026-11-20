@@ -52,7 +52,7 @@ Packet capture should be an integration point: use upstream sniffer mode and sta
 
 ## 3. FlipCTL integration strategy and upstream status
 
-Official FlipCTL material describes:
+Official FlipCTL material (README at commit `3285ba6caf`, 2026-06-19) describes:
 - a backend for OS services and command-line tools;
 - app wrappers/plugins;
 - a frontend using HTML/JavaScript;
