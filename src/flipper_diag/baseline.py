@@ -104,8 +104,8 @@ def compare_device_inventory(
             findings.append(
                 Finding(
                     code="NETWORK-DUPLICATE-IP",
-                    severity="critical",
-                    title="Duplicate IP address observed",
+                    severity="warning",
+                    title="Potential duplicate IP address observed",
                     detail=f"{address} is reported by multiple devices: {', '.join(sorted(macs))}.",
                     recommendation=(
                         "Verify DHCP reservations and static addresses; confirm the conflict "
