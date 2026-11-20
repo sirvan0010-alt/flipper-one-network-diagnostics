@@ -117,7 +117,8 @@ def test_panel_menu_and_ethernet_flow_use_shared_core(monkeypatch):
     menu = namespace["main_menu"]
     assert menu.ran is True
     assert [item["label"] for item in menu.kwargs["items"]()] == [
-        "Interfaces", "Ethernet link", "History", "Safe Mode", "About"
+        "Interfaces", "Ethernet link", "Default route", "DNS config",
+        "History", "Safe Mode", "About"
     ]
 
     menu.selected = 0
@@ -133,3 +134,63 @@ def test_panel_menu_and_ethernet_flow_use_shared_core(monkeypatch):
     assert link_menu.handler(FakeKey.OK) is True
     rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "Speed" and row.get("value") == "1000 Mb/s" for row in rows)
+
+
+
+def test_route_and_dns_screens_use_read_only_collectors(monkeypatch):
+    namespace = load_app(monkeypatch)
+    monkeypatch.setitem(
+        namespace,
+        "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address", status="ok", data={"interfaces": [], "count": 0}
+        ),
+    )
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+    monkeypatch.setitem(
+        namespace,
+        "collect_default_routes",
+        lambda: DiagnosticResult(
+            collector="linux.default_routes",
+            status="ok",
+            data={
+                "routes": [
+                    {
+                        "family": "inet",
+                        "device": "end0",
+                        "gateway": "192.0.2.1",
+                        "metric": 100,
+                        "protocol": "dhcp",
+                    }
+                ]
+            },
+        ),
+    )
+    monkeypatch.setitem(
+        namespace,
+        "collect_dns_config",
+        lambda: DiagnosticResult(
+            collector="linux.resolver_config",
+            status="ok",
+            data={
+                "nameservers": ["192.0.2.53"],
+                "search_domains": ["lan.example"],
+                "local_stub": False,
+            },
+        ),
+    )
+    namespace["main"]()
+    menu = namespace["main_menu"]
+    detail = namespace["detail"]
+
+    menu.selected = 2
+    assert menu.handler(FakeKey.OK) is True
+    route_rows = detail.kwargs["rows"]()
+    assert any(row.get("label") == "Gateway" and row.get("value") == "192.0.2.1"
+               for row in route_rows)
+
+    menu.selected = 3
+    assert menu.handler(FakeKey.OK) is True
+    dns_rows = detail.kwargs["rows"]()
+    assert any(row.get("label") == "DNS 1" and row.get("value") == "192.0.2.53"
+               for row in dns_rows)
