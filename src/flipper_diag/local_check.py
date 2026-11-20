@@ -53,8 +53,13 @@ def collect_local_check(interface: str | None = None) -> DiagnosticResult:
         "routes": route_result.to_dict(),
         "dns": dns_result.to_dict(),
     }
+    has_wired_interface = any(
+        item.get("link_type") == "ether" and item.get("wireless") is False
+        for item in interfaces
+    )
     component_status = {
         "interfaces": interface_result.status,
+        "wired_interface": "available" if has_wired_interface else "not_available",
         "routes": route_result.status,
         "dns": dns_result.status,
     }
