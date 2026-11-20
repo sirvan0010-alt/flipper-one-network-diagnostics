@@ -7,11 +7,11 @@ Stav: workflow soubory jsou přidány do vývojové větve. Aktivace na výchoz�
 | Workflow | Spuštění | Účel |
 |---|---|---|
 | `Python checks` – x86_64 | push, PR, ručně, každé pondělí | Testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
-| `Python checks` – ARM64 | stejné události | Nativní ARM64 testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite smoke test a sestavení FlipCTL app bundle |
+| `Python checks` – ARM64 | stejné události | Nativní ARM64 testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages |
 | `CodeQL security analysis` | push, PR, ručně, každé pondělí | Statická analýza Pythonu a GitHub Actions, sada `security-extended` |
 | `Python security checks` | push, PR, ručně, každé pondělí | `pip-audit`, Bandit pro nálezy vysoké závažnosti a kontrola kompilovatelnosti |
 
-ARM64 job používá nativní GitHub-hosted runner `ubuntu-24.04-arm`, nikoli emulaci QEMU. Protože je repozitář veřejný, tento standardní runner je podle GitHubu dostupný pro veřejné projekty. Job ověřuje `aarch64`, spouští testy na ARM64, sestaví `py3-none-any` wheel, nainstaluje jej do čistého virtuálního prostředí bez indexu balíčků a provede read-only CLI/SQLite smoke test.
+ARM64 job používá nativní GitHub-hosted runner `ubuntu-24.04-arm`, nikoli emulaci QEMU. Protože je repozitář veřejný, tento standardní runner je podle GitHubu dostupný pro veřejné projekty. Job ověřuje `aarch64`, spouští testy na ARM64, sestaví `py3-none-any` wheel, nainstaluje jej do čistého virtuálního prostředí bez indexu balíčků a provede read-only CLI/SQLite smoke test. Nakonec sestaví skutečný app adresář a importuje všechny jeho moduly v režimu Python `-S`, bez přístupu k vývojovému checkoutu a site-packages.
 
 **Hranice důkazu:** úspěšný ARM64 CI job prokazuje běh na obecném Linuxu ARM64. Neprokazuje kompatibilitu s konkrétním Flipper OS image, jeho Python Runtime, ovladači, oprávněními ani fyzickým zařízením. To zůstává samostatným testem na cílovém hardware.
 
