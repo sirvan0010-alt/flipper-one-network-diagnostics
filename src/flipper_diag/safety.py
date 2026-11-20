@@ -1,7 +1,7 @@
 """Fail-closed authorization policy for future active network operations."""
 
-from dataclasses import dataclass
 import ipaddress
+from dataclasses import dataclass
 
 
 class ActiveOperationBlocked(PermissionError):
@@ -29,6 +29,7 @@ def require_active_allowed(
     *,
     safe_mode: bool = True,
     authorization: ActiveAuthorization | None = None,
+    target: str | None = None,
 ) -> None:
     """Fail closed unless an operator confirms a bounded IP-only scope."""
     if safe_mode is not False:
@@ -73,3 +74,15 @@ def require_active_allowed(
 
     if len(normalized_targets) != len(authorization.targets):
         raise ActiveOperationBlocked("Duplicate targets are not allowed.")
+
+    if target is not None:
+        if not isinstance(target, str) or not target.strip():
+            raise ActiveOperationBlocked("The requested target must be a literal IP address.")
+        try:
+            requested_target = ipaddress.ip_address(target)
+        except ValueError as exc:
+            raise ActiveOperationBlocked("The requested target must be a literal IP address.") from exc
+        if requested_target not in normalized_targets:
+            raise ActiveOperationBlocked(
+                "The requested target is not included in the explicit authorization target list."
+            )
