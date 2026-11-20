@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,32 @@ def test_packager_creates_script_and_core_package(tmp_path):
     assert (output / "flipper_diag" / "store.py").is_file()
     assert (output / "flipper_diag" / "linux_ip.py").is_file()
     assert (output / "README.txt").is_file()
+
+    # Import the copied package with site-packages disabled. This proves that
+    # the app bundle contains its own core and does not accidentally rely on the
+    # editable checkout or development dependencies installed by CI.
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(output)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-S",
+            "-c",
+            (
+                "import importlib, pkgutil, flipper_diag; "
+                "[importlib.import_module(m.name) "
+                "for m in pkgutil.iter_modules(flipper_diag.__path__, "
+                "'flipper_diag.')]; "
+                "print(flipper_diag.__version__)"
+            ),
+        ],
+        cwd=tmp_path,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stdout.strip() == "0.1.0"
 
 
 def test_packager_refuses_to_overwrite_existing_directory(tmp_path):
