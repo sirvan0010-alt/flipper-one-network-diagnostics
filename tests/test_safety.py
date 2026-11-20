@@ -57,3 +57,17 @@ def test_duplicate_targets_are_blocked():
     )
     with pytest.raises(ActiveOperationBlocked, match="Duplicate"):
         require_active_allowed(safe_mode=False, authorization=auth)
+
+
+@pytest.mark.parametrize("safe_mode", [None, 0, "false"])
+def test_non_boolean_false_safe_mode_value_is_still_blocked(safe_mode):
+    auth = ActiveAuthorization("connectivity", "192.0.2.0/24", ("192.0.2.1",), True)
+    with pytest.raises(ActiveOperationBlocked, match="Safe Mode"):
+        require_active_allowed(safe_mode=safe_mode, authorization=auth)
+
+
+@pytest.mark.parametrize("target", [None, 1234, b"192.0.2.1", ""])
+def test_non_string_or_empty_targets_are_blocked(target):
+    auth = ActiveAuthorization("connectivity", "192.0.2.0/24", (target,), True)
+    with pytest.raises(ActiveOperationBlocked, match="Targets must be"):
+        require_active_allowed(safe_mode=False, authorization=auth)
