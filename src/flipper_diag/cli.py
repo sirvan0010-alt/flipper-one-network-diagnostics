@@ -6,7 +6,8 @@ from pathlib import Path
 
 from . import __version__
 from .doctor import collect_doctor_report
-from .store import default_database_path, list_results
+from .linux_ip import collect_ip_interfaces
+from .store import default_database_path, list_results, save_result
 
 
 def main() -> None:
@@ -18,6 +19,15 @@ def main() -> None:
         "doctor", help="show local platform capabilities without network probes"
     )
     doctor.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+
+    interfaces = subparsers.add_parser(
+        "interfaces", help="read local Linux interface and address information"
+    )
+    interfaces.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    interfaces.add_argument("--no-save", action="store_true", help="do not store this result")
+    interfaces.add_argument(
+        "--db", type=Path, default=default_database_path(), help="SQLite database path"
+    )
 
     history = subparsers.add_parser(
         "history", help="show locally stored diagnostic runs"
@@ -44,6 +54,29 @@ def main() -> None:
             for name, path in report["tools"].items():
                 print(f"  {name:10} {path or 'not installed'}")
             print("\nRead-only: no network traffic generated.")
+    elif args.command == "interfaces":
+        result = collect_ip_interfaces()
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"Interface inventory · status: {result.status}")
+            for interface in result.data.get("interfaces", []):
+                addresses = ", ".join(
+                    f"{item.get('local')}/{item.get('prefixlen')}"
+                    for item in interface["addresses"]
+                )
+                print(
+                    f"{interface['name']:12} {interface.get('operstate') or '-':8} "
+                    f"{interface.get('mac_address') or '-':18} {addresses}"
+                )
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
     elif args.command == "history":
         results = list_results(args.db, limit=args.limit)
         if args.json:
