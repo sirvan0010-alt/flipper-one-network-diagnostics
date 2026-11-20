@@ -17,6 +17,7 @@ def test_parse_ethtool_output():
         "duplex": "full",
         "auto_negotiation": True,
         "link_detected": True,
+        "source": "ethtool",
     }
 
 
@@ -68,3 +69,74 @@ def test_collector_marks_link_down(monkeypatch):
 
     assert result.status == "warning"
     assert result.findings[0].code == "ETH-LINK-DOWN"
+
+
+def test_sysfs_fallback_reads_carrier_speed_and_duplex(tmp_path, monkeypatch):
+    interface = tmp_path / "end0"
+    interface.mkdir()
+    (interface / "operstate").write_text("up\\n", encoding="utf-8")
+    (interface / "carrier").write_text("1\\n", encoding="utf-8")
+    (interface / "speed").write_text("1000\\n", encoding="utf-8")
+    (interface / "duplex").write_text("full\\n", encoding="utf-8")
+    monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
+    monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: None)
+
+    result = linux_ethtool.collect_link_status("end0")
+
+    assert result.status == "ok"
+    assert result.collector == "linux.sysfs_link"
+    assert result.data == {
+        "link_detected": True,
+        "speed_mbps": 1000,
+        "duplex": "full",
+        "auto_negotiation": None,
+        "operstate": "up",
+        "source": "sysfs",
+    }
+
+
+def test_sysfs_fallback_reports_link_down(tmp_path, monkeypatch):
+    interface = tmp_path / "end0"
+    interface.mkdir()
+    (interface / "operstate").write_text("down\\n", encoding="utf-8")
+    (interface / "carrier").write_text("0\\n", encoding="utf-8")
+    monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
+    monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: None)
+
+    result = linux_ethtool.collect_link_status("end0")
+
+    assert result.status == "warning"
+    assert result.findings[0].code == "ETH-LINK-DOWN"
+
+
+def test_sysfs_fallback_reports_unavailable_carrier(tmp_path, monkeypatch):
+    interface = tmp_path / "end0"
+    interface.mkdir()
+    (interface / "operstate").write_text("unknown\\n", encoding="utf-8")
+    monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
+    monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: None)
+
+    result = linux_ethtool.collect_link_status("end0")
+
+    assert result.status == "warning"
+    assert result.data["link_detected"] is None
+    assert result.findings[0].code == "ETH-LINK-STATUS-UNAVAILABLE"
+
+
+def test_ethtool_failure_falls_back_to_sysfs(tmp_path, monkeypatch):
+    interface = tmp_path / "end0"
+    interface.mkdir()
+    (interface / "operstate").write_text("up\\n", encoding="utf-8")
+    (interface / "carrier").write_text("1\\n", encoding="utf-8")
+    monkeypatch.setattr(linux_ethtool, "SYS_CLASS_NET", tmp_path)
+    monkeypatch.setattr(linux_ethtool.shutil, "which", lambda name: "/usr/sbin/ethtool")
+    monkeypatch.setattr(
+        linux_ethtool.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 1, "", "unsupported"),
+    )
+
+    result = linux_ethtool.collect_link_status("end0")
+
+    assert result.collector == "linux.sysfs_link"
+    assert result.data["link_detected"] is True
