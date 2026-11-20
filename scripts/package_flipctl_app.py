@@ -20,8 +20,9 @@ Install:
 2. Open Apps > Network Diagnostics > Network Diagnostics.
 3. If prompted, install "Python Runtime" from the FlipCTL App Manager.
 
-The app currently performs local, read-only interface inventory and Ethernet link
-queries. It does not scan other devices or send active diagnostic probes.
+The app currently performs local, read-only interface inventory, Ethernet link,
+default-route and resolver-configuration queries. It does not scan other devices,
+probe gateways or send DNS requests.
 Results are stored locally under ~/.local/share/flipper-one-network-diagnostics/.
 """
 
