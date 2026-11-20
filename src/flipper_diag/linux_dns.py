@@ -25,7 +25,7 @@ def parse_resolv_conf(payload: str) -> dict[str, list[str]]:
         if key == "nameserver" and values:
             parsed["nameservers"].append(values[0])
         elif key in ("search", "domain"):
-            parsed["search"].extend(values)
+            parsed["search"] = values
         elif key == "options":
             parsed["options"].extend(values)
     return parsed
