@@ -74,3 +74,97 @@ def test_packager_refuses_to_overwrite_existing_directory(tmp_path):
 
     assert result.returncode != 0
     assert "output already exists" in result.stderr
+
+
+def test_packaged_app_launches_with_flipctl_runtime_stub(tmp_path):
+    output = tmp_path / "Network Diagnostics"
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "package_flipctl_app.py"),
+            "--output",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    runtime = tmp_path / "runtime-stub"
+    runtime.mkdir()
+    (runtime / "flipctl.py").write_text(
+        """
+from enum import Enum
+
+class Key(Enum):
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
+    OK = "ok"
+    BACK = "back"
+    ESCAPE = "escape"
+    VIEW = "view"
+    POWER = "power"
+    EDIT = "edit"
+    RUN = "run"
+    PTT = "ptt"
+
+class View:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+    def on_key(self, handler):
+        self.handler = handler
+        return handler
+    def run(self, *args, **kwargs):
+        return None
+    def show(self):
+        return None
+    def redraw(self):
+        return None
+
+def Menu(items, **kwargs):
+    return View(items=items, **kwargs)
+
+def Detail(rows, **kwargs):
+    return View(rows=rows, **kwargs)
+
+def Log(lines, **kwargs):
+    return View(lines=lines, **kwargs)
+
+def item(label, **kwargs):
+    return {"label": label, **kwargs}
+
+def pair(label, value="", **kwargs):
+    return {"label": label, "value": value, **kwargs}
+
+def heading(label, value=""):
+    return {"label": label, "value": value}
+
+def rule():
+    return {"kind": "rule"}
+
+def text(value, **kwargs):
+    return {"value": value, **kwargs}
+
+def wrap(value):
+    return [value]
+""",
+        encoding="utf-8",
+    )
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(runtime)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-S",
+            str(output / "network-diagnostics.fap.py"),
+        ],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
