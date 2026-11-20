@@ -11,9 +11,12 @@ updates:
     labels:
       - dependencies
     groups:
-      python-dependencies:
+      python-minor-patch:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /.github/workflows
