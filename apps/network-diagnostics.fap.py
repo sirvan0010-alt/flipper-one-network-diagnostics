@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import flipctl
 
+from flipper_diag.linux_dns import collect_dns_config
 from flipper_diag.linux_ethtool import collect_link_status
 from flipper_diag.linux_ip import collect_ip_interfaces
-from flipper_diag.linux_dns import collect_dns_config
 from flipper_diag.linux_routes import collect_default_routes
 from flipper_diag.store import (
     default_database_path,
@@ -134,7 +134,7 @@ def show_routes():
         rows.append(flipctl.rule())
         rows.append(flipctl.heading(route["family"], route.get("device") or "no device"))
         rows.append(flipctl.pair("Gateway", route.get("gateway") or "on-link"))
-        rows.append(flipctl.pair("Metric", str(route.get("metric") or "-")))
+        rows.append(flipctl.pair("Metric", str(route["metric"] if route.get("metric") is not None else "-")))
         rows.append(flipctl.pair("Protocol", route.get("protocol") or "-"))
     if not result.data.get("routes"):
         rows.append(flipctl.text("No default route found."))
