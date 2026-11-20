@@ -11,7 +11,10 @@ Před jakoukoli změnou kódu nebo technickým tvrzením si přečti celý [AGEN
 ## Co je připraveno
 
 - Python balíček v `src/flipper_diag/`.
-- Read-only příkaz `flipper-diag doctor` pro inventuru lokálního systému a dostupných síťových nástrojů; negeneruje síťový provoz.
+- Read-only příkaz `flipper-diag doctor` pro inventuru lokálního systému a dostupných síťových nástrojů.
+- Read-only inventář rozhraní přes `iproute2` a stav Ethernet linky přes `ethtool`.
+- Lokální historie výsledků v SQLite a pojmenované inventory baseline.
+- První pravidla pro nové/chybějící zařízení, změny IP a duplicitní IP.
 - Verzovaný datový model výsledků diagnostiky.
 - Základní default-deny politika pro aktivní operace.
 - Automatické testy pro výchozí bezpečnostní chování a read-only inventuru.
@@ -23,6 +26,8 @@ python -m pip install -e ".[dev]"
 pytest
 flipper-diag doctor
 flipper-diag doctor --json
+flipper-diag interfaces
+flipper-diag link eth0
 flipper-diag history
 flipper-diag history --json
 ```
