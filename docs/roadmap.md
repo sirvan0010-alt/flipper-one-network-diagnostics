@@ -25,6 +25,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 |---|---|---|
 | Přenosný Python balíček a CLI | Implementováno | Instalace přes `pip install -e .`; běh v CI |
 | Read-only doctor | Implementováno | Inventura OS, rozhraní a dostupných nástrojů; negeneruje síťové pakety |
+| FlipCTL Python app | Prototyp implementován | `apps/network-diagnostics.fap.py` + package builder; cílový běh na Flipperu zatím neověřen |
 | Výsledkový JSON kontrakt | Implementováno v1 | `DiagnosticResult` a `Finding` |
 | Safe Mode základ | Implementováno jako policy API | Zatím není napojen na aktivní síťové kolektory |
 | SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
@@ -35,12 +36,13 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | DHCP/DNS/gateway AutoTest | Nezahájeno | Vyžaduje samostatné testy a autorizaci pro aktivní síťový provoz |
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Blokováno stabilním API | Čeká na implementované a dokumentované upstream rozhraní |
-| Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici |
+| Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; FlipCTL app API je pouze staticky ověřené proti veřejné dokumentaci |
 
 ### Co je potřeba před označením M3 za dokončený
 
 - CI musí projít celou podporovanou Python maticí.
 - Doplnit integrační testy databáze, migrací a CLI.
+- Na cílovém zařízení ověřit Python Runtime, import balíčku vedle `.fap.py` skriptu, zobrazení menu, mapování kláves a zápis SQLite.
 - Připravit instalaci balíčku bez vývojových závislostí.
 - Ověřit runtime a spotřebu na podporované ARM64 Linux desce, později na Flipper One.
 - Uzavřít rozhraní pro FlipCTL až podle skutečného upstream API; neblokovat tím přenosné jádro.
