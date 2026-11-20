@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import shutil
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from .models import DiagnosticResult, Finding
 
 COMMAND_TIMEOUT_SECONDS = 5
-SYS_CLASS_NET = Path('/sys/class/net')
+SYS_CLASS_NET = Path("/sys/class/net")
 
 
 def parse_ip_address_json(payload: str) -> list[dict[str, Any]]:
