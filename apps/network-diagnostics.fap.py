@@ -40,6 +40,7 @@ state = {
     "pending_active_action": None,
     "neighbors": [],
     "neighbors_saved": "",
+    "detail_back": None,
 }
 
 
@@ -246,6 +247,7 @@ def show_neighbors():
     state["neighbors"] = result.data.get("neighbors", [])
     state["neighbors_saved"] = persist(result)
     if not state["neighbors"]:
+        state["detail_back"] = None
         state["detail_rows"] = [
             flipctl.heading("Known devices", "EMPTY"),
             flipctl.text("The local kernel neighbor cache contains no entries."),
@@ -278,6 +280,7 @@ def show_neighbor_detail(index):
     ]
     state["detail_rows"] = rows
     state["detail_refresh"] = lambda: show_neighbor_detail(index)
+    state["detail_back"] = neighbor_menu.show
     detail.show()
 
 
