@@ -43,9 +43,9 @@ This register prevents duplicate implementation and tracks official changes that
 5. Its tree already contains `apps/ping.fap.py` and an experimental `apps/Test Tools/ethernet-tester.fap.py`. The latter describes reserved RTL8211F registers, privileged MII ioctls, raw test frames, PHY link drops and a kernel polling race. Do not treat it as a safe/released cable tester and do not duplicate its low-level method.
 6. The published rootfs package manifest at build-scripts commit `836f7e7f8937cba3a25a37b8f4ad888a121783cc` explicitly includes `iproute2`, `iperf3`, `iputils-ping`, `iw`, `tcpdump`, `traceroute`, `bluez`, `python3-pandas` and `python3-plotly`. It does not explicitly list `ethtool`, `nmap`, `lldpd`, `snmp` or `tshark`; detect optional tools instead of assuming they exist.
 7. The public `flipperdevices/flipctl` repository's default branch is `dev` (latest visible commit `3285ba6caf`, 2026-06-19). Its README describes a backend, HTML/JavaScript frontend, headless WebKit renderer on DRM, app wrappers and multiple control interfaces. It explicitly invites architecture and plugin-system proposals. Open PRs include the web/TUI/plugin-system prototype and architecture proposals; we did not find a stable versioned third-party plugin contract. The README describes the linked Fake FLipCTL2 as a rough AI-made prototype needing rework, not a production runtime.
-5. `fake-flipctl2` in `flipperone-testing` is a test UI harness, not the production FlipCTL implementation or a complete Flipper One emulator.
-6. The official Open Tasks page was refreshed at `flipperone-docs` commit `59b8688dfe` (2026-11-20 01:19 UTC). It currently lists no open `help wanted` tasks in the Testing sub-project; the User Interface sub-project does list an Nmap wrapper UI task (#15). Do not submit a contribution without first reading the live issue and its comments.
-7. The Flipper Network testing documentation now explicitly groups Wi-Fi access-point, client, concurrency and dual-band test modes; Ethernet, Bluetooth, cellular and satellite tests are separate areas. This is a testing plan/category, not proof every mode is shipped or supported by the production image.
+8. `fake-flipctl2` in `flipperone-testing` is a test UI harness, not the production FlipCTL implementation or a complete Flipper One emulator.
+9. The official Open Tasks page was refreshed at `flipperone-docs` commit `59b8688dfe` (2026-11-20 01:19 UTC). It currently lists no open `help wanted` tasks in the Testing sub-project; the User Interface sub-project does list an Nmap wrapper UI task (#15). Do not submit a contribution without first reading the live issue and its comments.
+10. The Flipper Network testing documentation now explicitly groups Wi-Fi access-point, client, concurrency and dual-band test modes; Ethernet, Bluetooth, cellular and satellite tests are separate areas. This is a testing plan/category, not proof every mode is shipped or supported by the production image.
 
 Sources:
 - https://docs.flipper.net/one/general/features
@@ -57,7 +57,10 @@ Sources:
 - https://github.com/flipperdevices/flipctl-slint/blob/dev/apps/ping.fap.py
 - https://github.com/flipperdevices/flipctl-slint/blob/dev/apps/Test%20Tools/ethernet-tester.fap.py
 - https://github.com/flipperdevices/flipctl/pulls
-- https://github.com/flipperdevices/flipperone-testing/tree/dev/fake-flipctl2\n- https://docs.flipper.net/one/testing/network\n- https://github.com/flipperdevices/flipperone-ui/issues/15\n- https://github.com/flipperdevices/flipperone-linux-build-scripts/commit/836f7e7f89
+- https://github.com/flipperdevices/flipperone-testing/tree/dev/fake-flipctl2
+- https://docs.flipper.net/one/testing/network
+- https://github.com/flipperdevices/flipperone-ui/issues/15
+- https://github.com/flipperdevices/flipperone-linux-build-scripts/commit/836f7e7f89
 - https://docs.flipper.net/one/dev-log/10
 - https://docs.flipper.net/one/how-to-join
 
