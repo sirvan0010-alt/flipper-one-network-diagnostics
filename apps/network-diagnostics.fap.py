@@ -12,8 +12,6 @@ other devices on the network.
 
 from __future__ import annotations
 
-import sqlite3
-
 import flipctl
 
 from flipper_diag.linux_ethtool import collect_link_status
