@@ -213,9 +213,9 @@ První integrační cíl je `flipctl-slint/docs/apps.md` a Python Runtime (`prov
 Stavy upstream funkce se vždy zapisují jednou z kategorií: **zdokumentovaný záměr**, **prototyp**, **sloučený kód**, **ověřeno na cílovém HW**, **vydáno**. Pouhé uvedení na produktové stránce neznamená hotovou funkci.
 
 
-### 6.6 Rozšíření funkčního plánu: Proxmark5 a volitelný CAN modul
+### 6.6 Rozšíření funkčního plánu: Proxmark5 a WiCAN PRO
 
-Podrobné UX, datové kontrakty, závislosti, bezpečnost a akceptační kritéria jsou v [docs/functional-specification.md](docs/functional-specification.md). Rozšíření nemění prioritu drátového MVP.
+Podrobné UX, datové kontrakty, závislosti, bezpečnost a akceptační kritéria jsou v [docs/functional-specification.md](docs/functional-specification.md). Technická integrace WiCAN PRO je rozepsána v [docs/wican-pro-integration.md](docs/wican-pro-integration.md). Rozšíření nemění prioritu drátového MVP.
 
 | ID | Funkce | Rozsah | Fáze / stav |
 |---|---|---|---|
@@ -226,8 +226,17 @@ Podrobné UX, datové kontrakty, závislosti, bezpečnost a akceptační kritér
 | F-49 | Authorized LF/HF workflow | Identifikace/čtení vlastních a laboratorních tagů; UHF až po ověření | M7 / Verify first |
 | F-50 | RFID capture/analysis/export | Časově a velikostně omezený capture a lokální analýza; citlivé dumpy chráněné | M7 / Verify first |
 | F-51 | Test-tag write/verify/emulation | Pouze prázdná/testovací média; vypnuto do samostatné bezpečnostní a HW validace | M7 / Deferred |
-| F-52 | Read-only automotive CAN capture | Samostatný experiment s externím transceiverem, pouze RX a black-box evidence | M7 / Deferred |
+| F-52 | Adapter-neutral read-only automotive CAN | Obecný receive-only kontrakt; WiCAN PRO je první plánovaný adaptér | M7 / Optional |
+| F-53 | WiCAN PRO discovery/capabilities | Ručně vybraný endpoint, identita, firmware a ověřené transporty; neprovádět plošné skeny | M7 / Verify first |
+| F-54 | WiCAN PRO passive CAN stream | Příjem rámců, prioritně ověřený Wi-Fi stream/SLCAN; BLE/GVRET až po ověření; žádný TX | M7 / Verify first |
+| F-55 | WiCAN PRO capture import/export | Podporované lokální soubory, checksum, timestamp a provenance; formáty ověřit | M7 / Build after parser validation |
+| F-56 | AutoDiag evidence interoperability | Reuse `autodiag-can-capture-v1` a evidence packů; žádná duplikace Kotlin runtime | M7 / Integrate |
+| F-57 | CAN observation analysis/timeline | Základní ID/rate/periodicita/gap/event timeline; pokročilý classifier zůstává v AutoDiag | M7 / Integrate |
 
-**PM5 bezdrátová omezení:** oficiální Iceman dokumentace popisuje BWM, Wi-Fi STA/TCP a BLE. V dokumentaci je však rozdíl v popisu BLE zabezpečení: usage guide uvádí plaintext/no bonding, zatímco aktuální command reference uvádí BLE pairing/passkey příkazy. Do ověření konkrétní verze je bezdrátové ovládání označeno Verify first. Wi-Fi TCP se nesmí vystavit do internetu; vyžaduje izolovanou LAN/VLAN a firewall. Nikdy automaticky neflashovat PM5/BWM firmware z naší aplikace.
+**WiCAN PRO firmware gate:** oficiální MeatPi dokumentace kontrolovaná 20. 11. 2026 uvádí firmware 6.0 jako beta a stable 4.52. Nový manuál/API pro 6.x se nevztahuje na 4.x. Neaktualizovat uživatelovo zařízení na beta a neimplementovat v6 API, dokud není zjištěna instalovaná verze a odpovídající dokumentace. USB-C nelze automaticky považovat za CAN data port; USB host je primárně pro příslušenství.
 
-**Tesla CAN inspirace:** z repozitáře flipper-tesla-fsd přebírat pouze principy read-only capture, timestampingu, capability detection, test fixture a black-box evidence. Nezařazovat FSD unlock, nag suppression, frame injection/replay, změny řízení/pohonu ani zápisy do ECU. F-52 je oddělený M7 experiment a není součástí síťového MVP.
+**Read-only hranice:** žádné CAN TX/injection/replay/fuzzing, OBD polling, UDS requesty, mazání DTC, J2534, ECU writes ani vehicle-control. SLCAN/GVRET/ELM protokoly mohou umět TX; integrační vrstva musí mít receive-only API a testy, že nepřenáší příkazy do sběrnice. Jakýkoli pozdější aktivní diagnostický rozsah vyžaduje samostatné schválení a bezpečnostní specifikaci.
+
+**Rozdělení AutoDiag projektů:** `AutoDiag-WiCAN-Pro` zůstává Android/Kotlin runtime a automobilovou diagnostikou; `AutoDiag-WiCAN-Diagnostic-Data` zůstává zdrojem profilů, evidence a provenience. Flipper projekt přebírá kompatibilní datový kontrakt `autodiag-can-capture-v1`, nikoli duplicitní runtime, PERIODIC/EVENT/MIXED classifier, counter filter nebo M2 scorer. Event/API triggery slouží jen k časové korelaci, ne jako důkaz kauzality.
+
+**Tesla CAN inspirace:** z repozitáře flipper-tesla-fsd přebírat pouze principy read-only capture, timestampingu, capability detection, test fixture a black-box evidence. Nezařazovat FSD unlock, nag suppression, frame injection/replay, změny řízení/pohonu ani zápisy do ECU.
