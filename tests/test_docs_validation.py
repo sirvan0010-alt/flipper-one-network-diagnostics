@@ -26,7 +26,7 @@ def test_valid_local_link_image_and_anchor_pass(tmp_path):
     write_tree(
         tmp_path,
         {
-            "README.md": "# Home\n\n[Guide](docs/guide.md#prvni-krok)\n![Logo](assets/logo.png)\n",
+            "README.md": "# Home\n\n[Guide](docs/guide.md#první-krok)\n![Logo](assets/logo.png)\n",
             "docs/guide.md": "## První krok\n",
             "assets/logo.png": "placeholder",
         },
