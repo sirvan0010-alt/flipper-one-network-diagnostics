@@ -7,6 +7,7 @@ from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
 from .linux_routes import collect_default_routes
 from .models import DiagnosticResult, Finding
+from .problem_engine import analyze_local_check
 
 
 def _select_ethernet_interface(
@@ -178,7 +179,7 @@ def collect_local_check(interface: str | None = None) -> DiagnosticResult:
         "Local readiness check only: no DHCP exchange, DNS query, gateway ping, TCP probe, "
         "active discovery, packet injection or Internet reachability test is performed."
     )
-    return DiagnosticResult(
+    result = DiagnosticResult(
         collector="network.local_check",
         status=status,
         interface=selected_interface,
@@ -191,3 +192,5 @@ def collect_local_check(interface: str | None = None) -> DiagnosticResult:
         findings=findings,
         limitations=limitations,
     )
+    result.data["assessment"] = analyze_local_check(result)
+    return result
