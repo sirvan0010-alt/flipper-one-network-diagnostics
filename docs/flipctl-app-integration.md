@@ -22,13 +22,13 @@ python scripts/package_flipctl_app.py
 ```
 
 The builder creates `dist/Network Diagnostics/` containing:
-- `network-diagnostics.fap.py` – FlipCTL app script;
-- `flipper_diag/` – the exact core source used by the CLI;
+- `network-diagnostics.fap.py` – FlipCTL script app, identified by its `# /// flipctl` manifest;
+- `flipper_diag/` – the exact core source used by the CLI, placed beside the script;
 - `README.txt` – installation notes.
 
-The output directory must not already exist; the builder refuses to overwrite it.
+The output directory must not already exist; the builder refuses to overwrite it. The directory is a group in the Apps list; the `.fap.py` file inside it is the actual app. This matches the upstream script-app scanner, which reads the manifest from the script and derives the `py` runtime from its extension.
 
-Copy the complete `Network Diagnostics` directory to `/home/user/Apps/` on the Flipper One. Open it from the Apps list. If FlipCTL asks for the Python Runtime, install it from the App Manager. The runtime provides the `flipctl` module and uses the device's own Python interpreter.
+Copy the complete `Network Diagnostics` directory to `/home/user/Apps/` on the Flipper One, then open the group and launch Network Diagnostics. If FlipCTL asks for the Python Runtime, install it from the App Manager. The runtime supplies the `flipctl` module and uses the device's own Python interpreter. It runs the script by path; Python can therefore import the sibling `flipper_diag/` directory without installing our package globally.
 
 A future release may be offered through the FlipCTL app catalogue. Catalogue submission and approval are separate from this repository's code.
 
@@ -50,7 +50,8 @@ The CI workflow includes a native `ubuntu-24.04-arm` job. It:
 - runs the unit test suite and Ruff on ARM64;
 - builds and checks a universal `py3-none-any` wheel;
 - installs the wheel into a clean virtual environment with package-index access disabled;
-- imports the core, checks SQLite availability, runs the read-only `doctor --json` command and assembles the FlipCTL app directory.
+- imports the installed core, checks SQLite availability and runs the read-only `doctor --json` command;
+- assembles the FlipCTL app directory, then imports every bundled core module with Python site-packages disabled.
 
 This validates the portable Python package on generic Linux ARM64. It does **not** validate the Flipper One root filesystem, the installed FlipCTL Python Runtime, app discovery, device permissions, UI input or hardware-specific interfaces.
 
