@@ -40,6 +40,10 @@ flipper-diag tcp-connect \
 
 The port must be included in the explicit authorization object. A successful handshake does not validate the application protocol; a refusal is not proof that the host is down.
 
+## Passive known-device list
+
+The on-device Known devices screen reads the local kernel IPv4/IPv6 neighbor cache only. Entries may be missing or stale; this screen does not send ARP, NDP or other discovery packets. Native Flipper LAN Discovery remains the preferred full discovery workflow.
+
 ## Current limitations
 
 - ICMP echo only; it does not prove DNS, TCP service or Internet reachability.
