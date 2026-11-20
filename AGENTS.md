@@ -192,3 +192,20 @@ Opatři vývojovou desku: Armsom Sige5 / Banana Pi BPI-M5 Pro (doporučená Flip
 ## 9. Spolupráce s Flipperem
 Vstup: https://docs.flipper.net/one/how-to-join, task trackery https://github.com/orgs/flipperdevices/projects, repozitáře https://github.com/flipperdevices, Discord https://discord.com/invite/flipper.
 Pravidla: komentuj jen úkoly s labelem `help wanted`, a to konkrétním příspěvkem (kód, test, měření). Nejvhodnější sekce: Testing → Network.
+
+### 6.5 Povinné rozhodnutí: upstream reuse vs. vlastní implementace
+
+Tato tabulka má přednost před původním plánem, pokud se funkce překrývá s oficiálním Flipper OS/FlipCTL. Před implementací vždy ověř skutečný stav upstreamu podle `docs/upstream-watch.md`.
+
+| Naše ID | Oficiální schopnost / rozhraní | Rozhodnutí projektu |
+|---|---|---|
+| F-08 | FlipCTL wrappers pro ping a standardní CLI nástroje | Použít dostupný systémový nástroj nebo oficiální wrapper; vlastní bude AutoTest orchestrace, prahy a interpretace |
+| F-11 | Oficiálně popsané pasivní/aktivní LAN Discovery | Nepřepisovat discovery engine bez důkazu mezery; integrovat výsledky a doplnit vrstvenou diagnostiku |
+| F-13 | FlipCTL wrapper pro traceroute | Reuse traceroute; vlastní bude korelace trasy se SNMP/LLDP a vysvětlení problémů |
+| F-15 | Flipper OS Network Sniffer profil a systémové nástroje | Znovu použít dostupný capture stack; vlastní bude diagnostické filtrování, souhrny a vazba na nálezy |
+| F-16 | Oficiálně popsaný Ethernet MitM Sniffer | Nevytvářet druhý transparentní bridge/capture engine; ověřit nativní implementaci a navázat analýzou PCAP |
+| F-34 | FlipCTL wrapper pro Nmap | Použít oficiální wrapper, pokud je v cílovém systému dostupný; vlastní bude bezpečná autorizace, profil a interpretace výsledků |
+| F-41/F-42 | FlipCTL frontend pro displej, Web UI a další ovládání | Primární UI stavět jako tenký app wrapper; nevyvíjet konkurenční remote-control framework |
+| F-05 | Publikovaná produktová specifikace zmiňuje VLAN detekci | Nejdříve ověřit, co skutečně poskytuje Flipper OS; naši část omezit na normalizaci, evidenci a diagnostické vyhodnocení |
+
+Stavy upstream funkce se vždy zapisují jednou z kategorií: **zdokumentovaný záměr**, **prototyp**, **sloučený kód**, **ověřeno na cílovém HW**, **vydáno**. Pouhé uvedení na produktové stránce neznamená hotovou funkci.
