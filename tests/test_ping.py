@@ -134,3 +134,18 @@ def test_ping_timeout_is_reported_without_retry(monkeypatch):
     )
     assert result.status == "warning"
     assert result.findings[0].code == "PING-COLLECTOR-TIMEOUT"
+
+
+def test_ping_command_error_exit_status_is_not_reported_as_packet_loss(monkeypatch):
+    monkeypatch.setattr("flipper_diag.ping.shutil.which", lambda name: "/usr/bin/ping")
+    monkeypatch.setattr(
+        "flipper_diag.ping.subprocess.run",
+        lambda command, **kwargs: subprocess.CompletedProcess(command, 2, IPV4_OUTPUT, ""),
+    )
+    result = run_ping(
+        "192.0.2.1",
+        authorization=_authorization(),
+        safe_mode=False,
+    )
+    assert result.status == "error"
+    assert result.data["packets_received"] == 3
