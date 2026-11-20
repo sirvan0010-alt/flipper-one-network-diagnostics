@@ -392,7 +392,6 @@ def test_ping_confirmation_aborts_if_gateway_changes_before_confirm(monkeypatch)
     )
     routes = [
         _wired_default_route(),
-        _wired_default_route(),
         DiagnosticResult(
             collector="linux.default_routes", status="ok",
             data={"routes": [{
@@ -431,7 +430,6 @@ def test_tcp_confirmation_aborts_if_wired_interface_changes_before_confirm(monke
         ),
     )
     routes = [
-        _wired_default_route(),
         _wired_default_route(),
         DiagnosticResult(
             collector="linux.default_routes", status="ok",
