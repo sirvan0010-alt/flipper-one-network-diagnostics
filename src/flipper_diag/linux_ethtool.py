@@ -134,7 +134,7 @@ def _collect_sysfs_link_status(interface: str) -> DiagnosticResult:
 
 def collect_link_status(interface: str) -> DiagnosticResult:
     """Query one local interface; does not transmit diagnostic network probes."""
-    if not INTERFACE_PATTERN.fullmatch(interface):
+    if interface in (".", "..") or not INTERFACE_PATTERN.fullmatch(interface):
         raise ValueError("invalid interface name")
 
     executable = shutil.which("ethtool")
