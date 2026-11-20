@@ -46,6 +46,10 @@ flipper-diag history
 flipper-diag history --json
 ```
 
+## Automatizace a kvalita
+
+- [CI/CD a bezpečnostní automatizace](docs/automation.md) – testy, CodeQL, kontrola závislostí, Dependabot a bezpečnostní kontroly.
+
 ## Architektura a vývoj před doručením zařízení
 
 - [Software strategy](docs/software-strategy.md) – standalone ovládání, technologie a integrace FlipCTL.
