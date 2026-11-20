@@ -118,8 +118,9 @@ def test_panel_menu_and_ethernet_flow_use_shared_core(monkeypatch):
     menu = namespace["main_menu"]
     assert menu.ran is True
     assert [item["label"] for item in menu.kwargs["items"]()] == [
-        "Interfaces", "Ethernet link", "Local Check", "Ping wired gateway",
-        "TCP gateway port", "Default route", "DNS config", "History", "Safe Mode", "About"
+        "Interfaces", "Ethernet link", "Local Check", "Known devices",
+        "Ping wired gateway", "TCP gateway port", "Default route", "DNS config",
+        "History", "Safe Mode", "About"
     ]
 
     menu.selected = 0
@@ -184,13 +185,13 @@ def test_route_and_dns_screens_use_read_only_collectors(monkeypatch):
     menu = namespace["main_menu"]
     detail = namespace["detail"]
 
-    menu.selected = 5
+    menu.selected = 6
     assert menu.handler(FakeKey.OK) is True
     route_rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "Gateway" and row.get("value") == "192.0.2.1"
                for row in route_rows)
 
-    menu.selected = 6
+    menu.selected = 7
     assert menu.handler(FakeKey.OK) is True
     dns_rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "DNS 1" and row.get("value") == "192.0.2.53"
@@ -307,7 +308,7 @@ def test_ping_gateway_requires_on_device_confirmation(monkeypatch):
     monkeypatch.setitem(namespace, "run_ping", fake_ping)
     namespace["main"]()
     menu = namespace["main_menu"]
-    menu.selected = 3
+    menu.selected = 4
     assert menu.handler(FakeKey.OK) is True
 
     confirm = namespace["confirm_detail"]
@@ -352,7 +353,7 @@ def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypa
     monkeypatch.setitem(namespace, "run_tcp_connect", fake_tcp)
     namespace["main"]()
     menu = namespace["main_menu"]
-    menu.selected = 4
+    menu.selected = 5
     assert menu.handler(FakeKey.OK) is True
 
     port_menu = namespace["tcp_port_menu"]
@@ -374,3 +375,53 @@ def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypa
     assert kwargs["safe_mode"] is False
     assert kwargs["authorization"].targets == ("192.0.2.1",)
     assert kwargs["authorization"].ports == (443,)
+
+
+def test_known_devices_menu_shows_only_cached_neighbors(monkeypatch):
+    namespace = load_app(monkeypatch)
+    monkeypatch.setitem(
+        namespace,
+        "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address",
+            status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    monkeypatch.setitem(
+        namespace,
+        "collect_neighbor_cache",
+        lambda: DiagnosticResult(
+            collector="linux.neighbor_cache",
+            status="ok",
+            data={
+                "neighbors": [
+                    {
+                        "family": "inet",
+                        "ip": "192.0.2.20",
+                        "mac_address": "02:00:00:00:00:20",
+                        "interface": "end0",
+                        "state": ["STALE"],
+                        "usable": True,
+                        "router": False,
+                    }
+                ],
+                "count": 1,
+                "usable_count": 1,
+            },
+        ),
+    )
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "neighbor-run-id")
+    namespace["main"]()
+
+    menu = namespace["main_menu"]
+    menu.selected = 3
+    assert menu.handler(FakeKey.OK) is True
+    neighbor_menu = namespace["neighbor_menu"]
+    assert neighbor_menu.shown is True
+    assert neighbor_menu.kwargs["items"]()[0]["label"] == "192.0.2.20"
+
+    assert neighbor_menu.handler(FakeKey.OK) is True
+    rows = namespace["detail"].kwargs["rows"]()
+    assert any(row.get("label") == "IP address" and row.get("value") == "192.0.2.20" for row in rows)
+    assert any("no LAN scan was performed" in row.get("value", "") for row in rows)
