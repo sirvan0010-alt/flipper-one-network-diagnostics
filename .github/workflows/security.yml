@@ -28,7 +28,7 @@ jobs:
       - name: Install project and audit tools
         run: python -m pip install -e ".[dev]" pip-audit bandit
       - name: Audit installed Python dependencies
-        run: pip-audit --strict
+        run: pip-audit --strict --skip-editable
       - name: Scan project code for high-severity security issues
         run: bandit -r src apps scripts -lll
       - name: Compile Python sources
