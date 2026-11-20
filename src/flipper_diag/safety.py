@@ -31,7 +31,7 @@ def require_active_allowed(
     authorization: ActiveAuthorization | None = None,
 ) -> None:
     """Fail closed unless an operator confirms a bounded IP-only scope."""
-    if safe_mode:
+    if safe_mode is not False:
         raise ActiveOperationBlocked("Safe Mode is enabled; active operation blocked.")
     if authorization is None:
         raise ActiveOperationBlocked("Explicit authorization is required.")
@@ -55,6 +55,10 @@ def require_active_allowed(
 
     normalized_targets = set()
     for target in authorization.targets:
+        if not isinstance(target, str) or not target.strip():
+            raise ActiveOperationBlocked(
+                "Targets must be non-empty literal IPv4 or IPv6 address strings."
+            )
         try:
             address = ipaddress.ip_address(target)
         except ValueError as exc:
