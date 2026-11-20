@@ -45,6 +45,7 @@ flipper-diag history --json
 - [Software strategy](docs/software-strategy.md) – standalone ovládání, technologie a integrace FlipCTL.
 - [FlipCTL app integration](docs/flipctl-app-integration.md) – sestavení a instalace aplikace přímo na Flipper One.
 - [Upstream watch](docs/upstream-watch.md) – sledované oficiální repozitáře a funkce, které nesmíme zbytečně duplikovat.
+- [Feature matrix](docs/feature-matrix.md) – rozhodnutí pro všech 45 plánovaných funkcí: reuse, integrace, vlastní vývoj nebo odklad.
 - [Architecture](docs/architecture.md) – oddělení jádra, kolektorů, úložiště, API a prezentace.
 - [Data model](docs/data-model.md) – lokální SQLite a verzování schématu.
 - [Verification register](docs/verification.md) – evidence skutečných hardwarových testů.
