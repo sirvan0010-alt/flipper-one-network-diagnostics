@@ -36,6 +36,8 @@ A future release may be offered through the FlipCTL app catalogue. Catalogue sub
 
 - Local interface/address inventory via `ip -j address show`.
 - Ethernet link state, speed and duplex via `ethtool` when installed.
+- IPv4/IPv6 default routes via `ip -j route`; this inspects the local routing table and does not test gateway reachability.
+- Local resolver configuration from `/etc/resolv.conf`; this does not send DNS queries and flags loopback resolver stubs.
 - Local SQLite result history.
 - Safe Mode shown as ON; this prototype does not run active scans or probes.
 
