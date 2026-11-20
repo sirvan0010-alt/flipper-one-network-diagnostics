@@ -57,7 +57,7 @@ def main() -> None:
     args = parser.parse_args()
     destination = build(args.output)
     print(f"FlipCTL app assembled at: {destination}")
-    print(f"Copy this folder to /home/user/Apps/ on Flipper One.")
+    print("Copy this folder to /home/user/Apps/ on Flipper One.")
 
 
 if __name__ == "__main__":
