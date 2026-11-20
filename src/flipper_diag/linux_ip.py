@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import shutil
 import subprocess
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 from .models import DiagnosticResult, Finding
 
 COMMAND_TIMEOUT_SECONDS = 5
+SYS_CLASS_NET = Path('/sys/class/net')
 
 
 def parse_ip_address_json(payload: str) -> list[dict[str, Any]]:
@@ -48,6 +50,14 @@ def parse_ip_address_json(payload: str) -> list[dict[str, Any]]:
             }
         )
     return interfaces
+
+
+def _is_wireless_interface(interface_name: str) -> bool | None:
+    """Return wireless state from sysfs; None means it cannot be classified."""
+    interface_path = SYS_CLASS_NET / interface_name
+    if not interface_path.is_dir():
+        return None
+    return (interface_path / "wireless").is_dir()
 
 
 def collect_ip_interfaces() -> DiagnosticResult:
@@ -99,6 +109,8 @@ def collect_ip_interfaces() -> DiagnosticResult:
 
     try:
         interfaces = parse_ip_address_json(completed.stdout)
+        for interface in interfaces:
+            interface["wireless"] = _is_wireless_interface(interface["name"])
     except ValueError as exc:
         return DiagnosticResult(
             collector="linux.ip_address",
