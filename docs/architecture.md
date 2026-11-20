@@ -22,7 +22,7 @@ Běžné testy musí být možné spustit a vyhodnotit přímo na Flipper One be
 
 - **Collectors:** obálky nad systémovými nástroji a vlastní parsování (např. iproute2, ethtool, tcpdump/tshark, iperf3, iw, BlueZ, SNMP).
 - **Core:** plánování úloh, politika safe mode, normalizace výsledků, pravidla nálezů.
-- **Storage:** SQLite, migrace schématu, baseline a historie.
+- **Storage:** SQLite, migrace schématu, baseline a historie; aktuální návrh je v [data-model.md](data-model.md).
 - **CLI/API:** přenositelné rozhraní mezi jádrem a prezentační vrstvou; lokální JSON výsledky.
 - **Presentation:** tenký FlipCTL app wrapper po ověření upstream API; primární ovládání na displeji Flipper One. Volitelně lokální web dashboard, TUI a export HTML/PDF/CSV.
 
