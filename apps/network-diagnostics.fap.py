@@ -5,9 +5,8 @@
 # ///
 """Local-first network diagnostics for the Flipper One panel.
 
-The device UI is deliberately read-only: it inventories local interfaces,
-Ethernet link state, default routes and resolver configuration, and stores results
-locally. Local Check combines these observations without sending network probes.
+Local inventory and configuration checks are passive. Optional gateway ICMP and
+single-port TCP tests require a separate on-device confirmation for each action.
 """
 
 from __future__ import annotations
