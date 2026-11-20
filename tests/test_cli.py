@@ -71,6 +71,52 @@ def test_link_command_saves_result_by_default(tmp_path, monkeypatch, capsys):
     assert database.exists()
 
 
+def test_routes_command_saves_result_by_default(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "routes.sqlite3"
+    monkeypatch.setattr(
+        sys, "argv", ["flipper-diag", "routes", "--db", str(database), "--json"]
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_default_routes",
+        lambda: DiagnosticResult(
+            collector="linux.default_routes",
+            status="ok",
+            data={"routes": [{"family": "inet", "gateway": "192.0.2.1"}], "count": 1},
+        ),
+    )
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    assert output["data"]["routes"][0]["gateway"] == "192.0.2.1"
+    assert output["run_id"]
+    assert database.exists()
+
+
+def test_dns_command_saves_result_by_default(tmp_path, monkeypatch, capsys):
+    database = tmp_path / "dns.sqlite3"
+    monkeypatch.setattr(
+        sys, "argv", ["flipper-diag", "dns", "--db", str(database), "--json"]
+    )
+    monkeypatch.setattr(
+        cli,
+        "collect_dns_config",
+        lambda: DiagnosticResult(
+            collector="linux.resolver_config",
+            status="ok",
+            data={"nameservers": ["192.0.2.53"]},
+        ),
+    )
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    assert output["data"]["nameservers"] == ["192.0.2.53"]
+    assert output["run_id"]
+    assert database.exists()
+
+
 def test_baseline_cli_save_and_compare(tmp_path, monkeypatch, capsys):
     database = tmp_path / "baseline.sqlite3"
     original = tmp_path / "original.json"
