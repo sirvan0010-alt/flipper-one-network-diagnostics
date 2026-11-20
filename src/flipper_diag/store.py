@@ -1,16 +1,18 @@
-"""Local SQLite persistence for normalized diagnostic results."""
+"""Local SQLite persistence for normalized diagnostic results and baselines."""
 
 from __future__ import annotations
 
 import json
 import sqlite3
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .baseline import compare_device_inventory
 from .models import DiagnosticResult
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 DEFAULT_DB_NAME = "results.sqlite3"
 
 
@@ -73,6 +75,20 @@ def initialize_database(path: str | Path) -> None:
                     PRAGMA user_version = 1;
                     """
                 )
+            version = 1
+        if version == 1:
+            with connection:
+                connection.execute(
+                    """
+                    CREATE TABLE inventory_baselines (
+                        baseline_id TEXT PRIMARY KEY,
+                        name TEXT NOT NULL UNIQUE,
+                        created_at TEXT NOT NULL,
+                        inventory_json TEXT NOT NULL
+                    )
+                    """
+                )
+                connection.execute("PRAGMA user_version = 2")
     finally:
         connection.close()
 
@@ -144,5 +160,79 @@ def list_results(path: str | Path, *, limit: int = 50) -> list[dict[str, Any]]:
             {"run_id": row["run_id"], **json.loads(row["result_json"])}
             for row in rows
         ]
+    finally:
+        connection.close()
+
+
+def save_baseline(
+    path: str | Path, name: str, devices: list[dict[str, Any]]
+) -> str:
+    """Save a named device inventory snapshot after validating its structure."""
+    if not name.strip():
+        raise ValueError("baseline name must not be empty")
+    snapshot = list(devices)
+    compare_device_inventory(snapshot, snapshot)
+    baseline_id = str(uuid.uuid4())
+    created_at = datetime.now(timezone.utc).isoformat()
+    initialize_database(path)
+    connection = _connect(path)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO inventory_baselines
+                    (baseline_id, name, created_at, inventory_json)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    baseline_id,
+                    name.strip(),
+                    created_at,
+                    json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")),
+                ),
+            )
+    finally:
+        connection.close()
+    return baseline_id
+
+
+def load_baseline(path: str | Path, name: str) -> dict[str, Any] | None:
+    """Load a named inventory baseline, or return None when it does not exist."""
+    initialize_database(path)
+    connection = _connect(path)
+    try:
+        row = connection.execute(
+            """
+            SELECT baseline_id, name, created_at, inventory_json
+            FROM inventory_baselines
+            WHERE name = ?
+            """,
+            (name,),
+        ).fetchone()
+        if row is None:
+            return None
+        return {
+            "baseline_id": row["baseline_id"],
+            "name": row["name"],
+            "created_at": row["created_at"],
+            "devices": json.loads(row["inventory_json"]),
+        }
+    finally:
+        connection.close()
+
+
+def list_baselines(path: str | Path) -> list[dict[str, str]]:
+    """List baseline names and creation times without loading their full inventories."""
+    initialize_database(path)
+    connection = _connect(path)
+    try:
+        rows = connection.execute(
+            """
+            SELECT baseline_id, name, created_at
+            FROM inventory_baselines
+            ORDER BY created_at DESC, rowid DESC
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
     finally:
         connection.close()
