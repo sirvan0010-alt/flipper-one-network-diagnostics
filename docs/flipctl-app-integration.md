@@ -1,6 +1,6 @@
 # FlipCTL app integration
 
-Status: first Python script app prototype, based on the public `flipctl-slint` app contract reviewed 2026-11-20.
+Status: first Python script app prototype, based on `flipperdevices/flipctl-slint` commit [`483ad588f5cd21e26eed416c949811821bb29a1f`](https://github.com/flipperdevices/flipctl-slint/commit/483ad588f5cd21e26eed416c949811821bb29a1f), reviewed 2026-11-20.
 
 ## Why this integration
 
@@ -58,6 +58,6 @@ This validates the portable Python package on generic Linux ARM64. It does **not
 ## Limitations and validation
 
 - The app has been syntax-checked and its package builder is covered by CI; it has not yet been launched on Flipper One hardware.
-- The FlipCTL app API is documented on the active `dev` branch, not versioned as a stable SDK. Re-check `flipctl-slint/docs/apps.md` and pin the exact compatible upstream commit before a release.
+- The FlipCTL app API is documented on the active `dev` branch, not versioned as a stable SDK. The reviewed source snapshot is commit `483ad588f5cd21e26eed416c949811821bb29a1f` (2026-11-19); re-check `flipctl-slint/docs/apps.md` and pin the exact compatible upstream commit before a release.
 - The Python runtime, app discovery, folder handling, UI key mapping and SQLite permissions need a target-device smoke test.
 - The first UI is deliberately small. Detailed packet analysis, topology and large reports remain optional browser/PC workflows.
