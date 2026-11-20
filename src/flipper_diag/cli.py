@@ -9,9 +9,9 @@ from pathlib import Path
 from . import __version__
 from .baseline import compare_device_inventory
 from .doctor import collect_doctor_report
+from .linux_dns import collect_dns_config
 from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
-from .linux_dns import collect_dns_config
 from .linux_routes import collect_default_routes
 from .store import (
     default_database_path,
