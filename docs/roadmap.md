@@ -17,7 +17,7 @@ Podrobný backlog F-01 až F-45 a závazné podmínky jsou v kořenovém [AGENTS
 
 Milník se nepovažuje za dokončený jen proto, že existuje kód. Musí mít reprodukovatelné testy, zdokumentovaná omezení a důkaz běhu na cílové platformě.
 
-## Aktuální stav implementace (2026-11-20)
+## Aktuální stav implementace (2026-11-20; aktualizováno po CI běhu)
 
 Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli potvrzení běhu na Flipper One.
 
@@ -31,12 +31,14 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | SQLite výsledky a historie | Implementováno v1 | Migrace schématu, ukládání výsledků, `history` |
 | SQLite inventory baseline | Implementováno v2 | Pojmenované baseline, ukládání/načítání |
 | Linux interface inventory | Implementováno | Read-only `ip -j address show`; ověřeno parserem a mock testy |
-| Ethernet link status | Implementováno | Read-only `ethtool <interface>`; ověřeno parserem a mock testy |
+| Ethernet link status | Implementováno | Read-only `ethtool <interface>`; ověřeno parserem a mock testy; nástroj nemusí být v rootfs |
+| IPv4/IPv6 default-route inventory | Implementováno | Read-only `ip -j route show default` a `ip -6 -j route show default`; mock testy |
+| Local DNS resolver configuration | Implementováno | Read-only parser `/etc/resolv.conf`; žádné DNS dotazy; mock testy |
 | Inventory diff | Implementováno | Nová/chybějící zařízení, změna IP, duplicitní IP; vstupní pozorování musí dodat collector/import |
-| DHCP/DNS/gateway AutoTest | Nezahájeno | Vyžaduje samostatné testy a autorizaci pro aktivní síťový provoz |
+| DHCP/DNS/gateway AutoTest | Částečně připraveno | Lokální route a resolver konfigurace existují; DHCP lease/offer, DNS resolution a gateway reachability zatím nejsou testovány |
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
-| FlipCTL integrace | Blokováno stabilním API | Čeká na implementované a dokumentované upstream rozhraní |
-| Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; FlipCTL app API je pouze staticky ověřené proti veřejné dokumentaci |
+| FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
+| Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
 
 ### Co je potřeba před označením M3 za dokončený
 
