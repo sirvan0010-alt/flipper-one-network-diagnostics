@@ -204,7 +204,10 @@ def run_ping(
             )
         )
 
-    status = "ok" if completed.returncode == 0 and not findings else "warning"
+    if completed.returncode not in (0, 1):
+        status = "error"
+    else:
+        status = "ok" if completed.returncode == 0 and not findings else "warning"
     return DiagnosticResult(
         collector="linux.ping",
         status=status,
