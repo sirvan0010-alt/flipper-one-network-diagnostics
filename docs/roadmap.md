@@ -39,6 +39,7 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | IPv4/IPv6 default-route inventory | Implementováno | Read-only `ip -j route show default` a `ip -6 -j route show default`; mock testy |
 | Local DNS resolver configuration | Implementováno | Read-only parser `/etc/resolv.conf`; žádné DNS dotazy; mock testy |
 | Local readiness check | Implementováno | Aggregates interface, Ethernet link, default route and DNS configuration; no active probes; unit/UI/CLI tests |
+| Passive neighbor inventory | Implementováno | Read-only IPv4/IPv6 kernel neighbor cache; no discovery packets; CLI and on-device Known devices screen |
 | Evidence-bounded problem engine | Částečně implementováno | Local Check reports observations and cautious likely causes; root cause is never marked confirmed |
 | Inventory diff | Implementováno | Nová/chybějící zařízení, změna IP, duplicitní IP; vstupní pozorování musí dodat collector/import |
 | DHCP/DNS/gateway AutoTest | Částečně připraveno | Local Check combines local config; one-target ICMP and single-port TCP commands exist in CLI and behind on-device confirmation; DHCP lease/offer, DNS resolution and full wired AutoTest UI are not yet implemented |
