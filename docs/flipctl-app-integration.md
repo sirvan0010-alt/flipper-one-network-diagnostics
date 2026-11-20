@@ -35,7 +35,7 @@ A future release may be offered through the FlipCTL app catalogue. Catalogue sub
 ## Current on-device functions
 
 - Local interface/address inventory via `ip -j address show`.
-- Ethernet link state, speed and duplex via `ethtool` when installed.
+- Ethernet link state via `ethtool` when installed, with a read-only `/sys/class/net` carrier/speed/duplex fallback when it is absent.
 - IPv4/IPv6 default routes via `ip -j route`; this inspects the local routing table and does not test gateway reachability.
 - Local resolver configuration from `/etc/resolv.conf`; this does not send DNS queries and flags loopback resolver stubs.
 - Local SQLite result history.
