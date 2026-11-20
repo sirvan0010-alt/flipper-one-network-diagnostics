@@ -61,6 +61,7 @@ def test_local_check_combines_read_only_components(monkeypatch):
     assert result.status == "ok"
     assert result.interface == "end0"
     assert result.data["active_probes"] is False
+    assert result.data["assessment"]["likely_causes"] == []
     assert result.data["component_status"] == {
         "interfaces": "ok",
         "wired_interface": "available",
