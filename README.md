@@ -13,6 +13,7 @@ Před jakoukoli změnou kódu nebo technickým tvrzením si přečti celý [AGEN
 - Python balíček v `src/flipper_diag/`.
 - Read-only příkaz `flipper-diag doctor` pro inventuru lokálního systému a dostupných síťových nástrojů.
 - Read-only inventář rozhraní přes `iproute2` a stav Ethernet linky přes `ethtool`.
+- První samostatná FlipCTL Python aplikace ovládaná displejem a fyzickými tlačítky.
 - Lokální historie výsledků v SQLite a pojmenované inventory baseline.
 - První pravidla pro nové/chybějící zařízení, změny IP a duplicitní IP.
 - Offline CLI pro ukládání a porovnávání inventářů proti pojmenované baseline.
