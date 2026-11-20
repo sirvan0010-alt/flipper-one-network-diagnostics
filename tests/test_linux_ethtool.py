@@ -140,3 +140,9 @@ def test_ethtool_failure_falls_back_to_sysfs(tmp_path, monkeypatch):
 
     assert result.collector == "linux.sysfs_link"
     assert result.data["link_detected"] is True
+
+
+@pytest.mark.parametrize("interface", [".", ".."])
+def test_collector_rejects_path_components(interface):
+    with pytest.raises(ValueError, match="invalid interface"):
+        linux_ethtool.collect_link_status(interface)
