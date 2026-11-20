@@ -36,8 +36,9 @@ Tento stav je softwarové ověření na GitHub CI a běžném Linuxu, nikoli pot
 | Ethernet link status | Implementováno | Read-only `ethtool <interface>`; ověřeno parserem a mock testy; nástroj nemusí být v rootfs |
 | IPv4/IPv6 default-route inventory | Implementováno | Read-only `ip -j route show default` a `ip -6 -j route show default`; mock testy |
 | Local DNS resolver configuration | Implementováno | Read-only parser `/etc/resolv.conf`; žádné DNS dotazy; mock testy |
+| Local readiness check | Implementováno | Aggregates interface, Ethernet link, default route and DNS configuration; no active probes; unit/UI/CLI tests |
 | Inventory diff | Implementováno | Nová/chybějící zařízení, změna IP, duplicitní IP; vstupní pozorování musí dodat collector/import |
-| DHCP/DNS/gateway AutoTest | Částečně připraveno | Lokální route a resolver konfigurace existují; DHCP lease/offer, DNS resolution a gateway reachability zatím nejsou testovány |
+| DHCP/DNS/gateway AutoTest | Částečně připraveno | Local Check combines local config; DHCP lease/offer, DNS resolution and gateway reachability are not yet tested |
 | LLDP/CDP/VLAN a SNMP | Nezahájeno | Je nutné nejprve ověřit nativní Flipper discovery a dostupné nástroje |
 | FlipCTL integrace | Python app prototyp | `.fap.py` kontrakt dokumentovaný v `flipctl-slint`; statické/mock testy a balení v CI, cílový běh neověřen |
 | Flipper One runtime/hardware | Neověřeno | Zařízení zatím není k dispozici; app API je ověřené proti zdrojům upstream, nikoli na fyzickém zařízení |
