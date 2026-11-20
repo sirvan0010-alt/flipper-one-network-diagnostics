@@ -87,6 +87,32 @@ def collect_local_check(interface: str | None = None) -> DiagnosticResult:
     else:
         component_status["link"] = "not_available"
 
+    route_devices = {
+        route.get("device")
+        for route in routes
+        if isinstance(route.get("device"), str) and route.get("device")
+    }
+    if (
+        selected_interface is not None
+        and route_devices
+        and selected_interface not in route_devices
+    ):
+        findings.append(
+            Finding(
+                code="ROUTE-DEFAULT-OTHER-INTERFACE",
+                severity="warning",
+                title="Default route uses another interface",
+                detail=(
+                    f"The selected Ethernet interface is {selected_interface}, but the "
+                    f"default route is associated with: {', '.join(sorted(route_devices))}."
+                ),
+                recommendation=(
+                    "Check route metrics and the intended wired interface before treating "
+                    "the default route as evidence of wired connectivity."
+                ),
+            )
+        )
+
     if selected_interface is not None:
         selected = next(
             (item for item in interfaces if item.get("name") == selected_interface),
