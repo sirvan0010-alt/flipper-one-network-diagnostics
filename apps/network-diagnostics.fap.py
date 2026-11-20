@@ -39,7 +39,7 @@ def persist(result) -> str:
         run_id = save_result(default_database_path(), result)
         state["last_saved"] = run_id[:8]
         return run_id[:8]
-    except (OSError, sqlite3.Error) as exc:
+    except Exception as exc:
         state["last_saved"] = "not saved"
         return f"not saved ({type(exc).__name__})"
 
@@ -129,7 +129,7 @@ def show_history():
     """Show the newest local diagnostic runs."""
     try:
         results = list_results(default_database_path(), limit=12)
-    except (OSError, sqlite3.Error) as exc:
+    except Exception as exc:
         state["history_lines"] = [f"History unavailable: {type(exc).__name__}"]
     else:
         lines = []
