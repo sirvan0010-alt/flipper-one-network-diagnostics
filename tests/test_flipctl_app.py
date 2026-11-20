@@ -425,3 +425,5 @@ def test_known_devices_menu_shows_only_cached_neighbors(monkeypatch):
     rows = namespace["detail"].kwargs["rows"]()
     assert any(row.get("label") == "IP address" and row.get("value") == "192.0.2.20" for row in rows)
     assert any("no LAN scan was performed" in row.get("value", "") for row in rows)
+    assert namespace["detail"].handler(FakeKey.ESCAPE) is True
+    assert neighbor_menu.shown is True
