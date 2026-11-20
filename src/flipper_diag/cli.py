@@ -11,6 +11,8 @@ from .baseline import compare_device_inventory
 from .doctor import collect_doctor_report
 from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
+from .linux_dns import collect_dns_config
+from .linux_routes import collect_default_routes
 from .store import (
     default_database_path,
     list_baselines,
@@ -59,6 +61,20 @@ def main() -> None:
     link.add_argument(
         "--db", type=Path, default=default_database_path(), help="SQLite database path"
     )
+
+    routes = subparsers.add_parser(
+        "routes", help="read local IPv4 and IPv6 default routes without probing"
+    )
+    routes.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    routes.add_argument("--no-save", action="store_true", help="do not store this result")
+    routes.add_argument("--db", type=Path, default=default_database_path())
+
+    dns = subparsers.add_parser(
+        "dns", help="read local resolver configuration without DNS queries"
+    )
+    dns.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    dns.add_argument("--no-save", action="store_true", help="do not store this result")
+    dns.add_argument("--db", type=Path, default=default_database_path())
 
     history = subparsers.add_parser(
         "history", help="show locally stored diagnostic runs"
@@ -144,6 +160,27 @@ def main() -> None:
             print(f"Ethernet link · {args.interface} · status: {result.status}")
             for key, value in result.data.items():
                 print(f"{key}: {value}")
+            for finding in result.findings:
+                print(f"{finding.severity}: {finding.title} — {finding.detail}")
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
+    elif args.command in ("routes", "dns"):
+        result = (
+            collect_default_routes()
+            if args.command == "routes"
+            else collect_dns_config()
+        )
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"{result.collector} · status: {result.status}")
+            print(json.dumps(result.data, indent=2, ensure_ascii=False))
             for finding in result.findings:
                 print(f"{finding.severity}: {finding.title} — {finding.detail}")
             if run_id:
