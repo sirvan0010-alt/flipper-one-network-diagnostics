@@ -82,6 +82,7 @@ def test_local_check_reports_missing_route_and_dns(monkeypatch):
                     {
                         "name": "end0",
                         "link_type": "ether",
+                        "wireless": False,
                         "operstate": "UP",
                         "addresses": [],
                     }
@@ -194,6 +195,7 @@ def test_local_check_flags_default_route_on_another_interface(monkeypatch):
                     {
                         "name": "end0",
                         "link_type": "ether",
+                        "wireless": False,
                         "operstate": "UP",
                         "addresses": [{"family": "inet", "local": "192.0.2.10"}],
                     },
