@@ -13,6 +13,7 @@ from .linux_dns import collect_dns_config
 from .linux_ethtool import collect_link_status
 from .linux_ip import collect_ip_interfaces
 from .linux_routes import collect_default_routes
+from .local_check import collect_local_check
 from .store import (
     default_database_path,
     list_baselines,
@@ -61,6 +62,14 @@ def main() -> None:
     link.add_argument(
         "--db", type=Path, default=default_database_path(), help="SQLite database path"
     )
+
+    local_check = subparsers.add_parser(
+        "local-check", help="combine local-only interface, link, route and DNS checks"
+    )
+    local_check.add_argument("--interface", help="Ethernet interface to inspect")
+    local_check.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    local_check.add_argument("--no-save", action="store_true", help="do not store this result")
+    local_check.add_argument("--db", type=Path, default=default_database_path())
 
     routes = subparsers.add_parser(
         "routes", help="read local IPv4 and IPv6 default routes without probing"
@@ -160,6 +169,23 @@ def main() -> None:
             print(f"Ethernet link · {args.interface} · status: {result.status}")
             for key, value in result.data.items():
                 print(f"{key}: {value}")
+            for finding in result.findings:
+                print(f"{finding.severity}: {finding.title} — {finding.detail}")
+            if run_id:
+                print(f"Saved run: {run_id}")
+            for note in result.limitations:
+                print(f"Note: {note}")
+    elif args.command == "local-check":
+        result = collect_local_check(args.interface)
+        run_id = None if args.no_save else save_result(args.db, result)
+        envelope = result.to_dict()
+        if run_id:
+            envelope["run_id"] = run_id
+        if args.json:
+            print(json.dumps(envelope, indent=2, ensure_ascii=False))
+        else:
+            print(f"{result.collector} · status: {result.status}")
+            print(json.dumps(result.data.get("component_status", {}), indent=2))
             for finding in result.findings:
                 print(f"{finding.severity}: {finding.title} — {finding.detail}")
             if run_id:
