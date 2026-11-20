@@ -1,4 +1,3 @@
-
 # Functional specification
 
 **Status:** working specification / implementation contract  
@@ -6,7 +5,7 @@
 **Reviewed:** 2026-11-20  
 **Branch:** arm64-runtime-validation
 
-This document turns backlog F-01–F-45 into testable product requirements and adds optional Proxmark5 and read-only CAN extensions. It supplements [AGENTS.md](../AGENTS.md), the [feature matrix](feature-matrix.md), [roadmap](roadmap.md), [architecture](architecture.md), [verification register](verification.md), and [active-test policy](active-tests.md).
+This document turns backlog F-01–F-52 into testable product requirements and adds optional Proxmark5 and read-only CAN extensions. It supplements [AGENTS.md](../AGENTS.md), the [feature matrix](feature-matrix.md), [roadmap](roadmap.md), [architecture](architecture.md), [verification register](verification.md), and [active-test policy](active-tests.md).
 
 ## 1. Product goal
 
