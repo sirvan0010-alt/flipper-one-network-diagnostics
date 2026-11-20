@@ -24,7 +24,7 @@ Běžné testy musí být možné spustit a vyhodnotit přímo na Flipper One be
 - **Core:** plánování úloh, politika safe mode, normalizace výsledků, pravidla nálezů.
 - **Storage:** SQLite, migrace schématu, baseline a historie; aktuální návrh je v [data-model.md](data-model.md).
 - **CLI/API:** přenositelné rozhraní mezi jádrem a prezentační vrstvou; lokální JSON výsledky.
-- **Presentation:** první cílová aplikace je Python `.fap.py` pro zdokumentované `flipctl` runtime z repozitáře `flipctl-slint`; její balíček obsahuje `flipper_diag` core vedle skriptu. Primární ovládání je displej a fyzické klávesy. Volitelně vzdálený panel, TUI a export HTML/PDF/CSV.
+- **Presentation:** první cílová aplikace je Python `.fap.py` pro zdokumentované `flipctl` runtime z repozitáře `flipctl-slint` ([integrace](flipctl-app-integration.md)); její balíček obsahuje `flipper_diag` core vedle skriptu. Primární ovládání je displej a fyzické klávesy. Volitelně vzdálený panel, TUI a export HTML/PDF/CSV.
 
 ## Technologie – počáteční rozhodnutí
 
