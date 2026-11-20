@@ -58,7 +58,7 @@ def test_ping_rejects_hostname_and_invalid_bounds_before_execution():
 
 
 def test_ping_rejects_target_outside_authorized_scope():
-    authorization = _authorization(target="192.0.2.1", scope="192.0.2.0/24")
+    authorization = _authorization(target="198.51.100.1", scope="192.0.2.0/24")
     with pytest.raises(ActiveOperationBlocked, match="outside"):
         run_ping(
             "198.51.100.1",
