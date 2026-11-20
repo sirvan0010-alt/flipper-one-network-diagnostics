@@ -133,7 +133,8 @@ def show_local_check():
     statuses = result.data.get("component_status", {})
     rows = [flipctl.heading("Local Check", result.status.upper())]
     rows.append(flipctl.rule())
-    rows.append(flipctl.pair("Ethernet", statuses.get("interfaces", "unknown")))
+    rows.append(flipctl.pair("Interfaces", statuses.get("interfaces", "unknown")))
+    rows.append(flipctl.pair("Wired port", statuses.get("wired_interface", "unknown")))
     rows.append(flipctl.pair("Link", statuses.get("link", "unknown")))
     rows.append(flipctl.pair("Default route", statuses.get("routes", "unknown")))
     rows.append(flipctl.pair("DNS config", statuses.get("dns", "unknown")))
@@ -274,12 +275,12 @@ def show_safe_mode():
 def show_about():
     state["detail_rows"] = [
         flipctl.heading("Network Diagnostics", "v0.3"),
-        flipctl.text("Standalone Flipper One app."),
+        flipctl.text("Designed for standalone Flipper One use."),
         flipctl.rule(),
         flipctl.pair("Control", "device keys"),
         flipctl.pair("Storage", "local SQLite"),
         flipctl.pair("Network mode", "passive/read-only"),
-        flipctl.pair("PC required", "no"),
+        flipctl.pair("PC required", "no; target validation pending"),
         flipctl.rule(),
         flipctl.text("Optional PC/browser tools are not needed for normal use."),
     ]
