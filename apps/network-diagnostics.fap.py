@@ -30,6 +30,10 @@ from flipper_diag.store import (
     save_result,
 )
 
+class ActiveTestAborted(RuntimeError):
+    """A user-confirmed active test was invalidated before any traffic was sent."""
+
+
 state = {
     "interfaces": [],
     "detail_rows": [],
@@ -323,7 +327,7 @@ def require_unchanged_gateway_route(target, interface):
         or current.get("gateway") != target
         or current.get("device") != interface
     ):
-        raise RuntimeError(
+        raise ActiveTestAborted(
             "The wired default route changed after confirmation. "
             "Reopen the test and review the new target before sending traffic."
         )
@@ -382,8 +386,10 @@ def run_confirmed_active_action():
         result, title = action()
     except Exception as exc:
         state["detail_rows"] = [
-            flipctl.heading("Active test failed", "ERROR"),
-            flipctl.text(type(exc).__name__),
+            flipctl.heading("Active test stopped", "ERROR"),
+            flipctl.text(
+                str(exc) if isinstance(exc, ActiveTestAborted) else type(exc).__name__
+            ),
             flipctl.text("No retry was attempted."),
         ]
         state["detail_refresh"] = None
