@@ -2,7 +2,7 @@ name: Python security checks
 
 on:
   push:
-    branches: [main, pre-device-foundation]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
