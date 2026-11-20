@@ -254,3 +254,56 @@ def test_ping_cli_rejects_out_of_scope_target_cleanly(tmp_path, monkeypatch, cap
     with pytest.raises(SystemExit):
         cli.main()
     assert "outside the explicitly authorized scope" in capsys.readouterr().err
+
+
+def test_tcp_connect_cli_requires_explicit_confirmation(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "tcp-connect", "--target", "192.0.2.1",
+            "--port", "443", "--scope", "192.0.2.1/32",
+            "--db", str(tmp_path / "tcp.sqlite3"),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        cli.main()
+
+
+def test_tcp_connect_cli_passes_single_target_and_port_authorization(
+    tmp_path, monkeypatch, capsys
+):
+    database = tmp_path / "tcp.sqlite3"
+    calls = []
+
+    def fake_tcp(target, port, **kwargs):
+        calls.append((target, port, kwargs))
+        return DiagnosticResult(
+            collector="linux.tcp_connect",
+            status="ok",
+            data={"target": target, "port": port, "connected": True},
+        )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "flipper-diag", "tcp-connect", "--target", "192.0.2.1",
+            "--port", "443", "--scope", "192.0.2.0/24",
+            "--confirm-active", "--timeout", "2", "--db", str(database), "--json",
+        ],
+    )
+    monkeypatch.setattr(cli, "run_tcp_connect", fake_tcp)
+    monkeypatch.setattr(cli, "save_result", lambda *args: "tcp-run-id")
+
+    cli.main()
+
+    output = json.loads(capsys.readouterr().out)
+    target, port, kwargs = calls[0]
+    assert target == "192.0.2.1"
+    assert port == 443
+    assert kwargs["safe_mode"] is False
+    assert kwargs["authorization"].targets == ("192.0.2.1",)
+    assert kwargs["authorization"].ports == (443,)
+    assert kwargs["timeout_seconds"] == 2
+    assert output["run_id"] == "tcp-run-id"
