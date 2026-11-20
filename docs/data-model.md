@@ -89,4 +89,4 @@ The `flipper-diag history` command reads recent results. It initializes an empty
 
 ## Resource and durability notes
 
-The initial implementation uses SQLite from the Python standard library. WAL mode, retention/rotation, flash write amplification, backup/restore, and power-loss behavior have not yet been tuned or validated on Flipper One. Do not claim target-device durability until measured on the actual storage stack.
+The initial implementation uses SQLite from the Python standard library. On POSIX systems the database file is restricted to owner read/write permissions (0600); failure to change permissions is tolerated and must be checked on the target image. WAL mode, retention/rotation, flash write amplification, backup/restore, and power-loss behavior have not yet been tuned or validated on Flipper One. Do not claim target-device durability until measured on the actual storage stack.
