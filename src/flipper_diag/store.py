@@ -40,60 +40,72 @@ def _connect(path: str | Path) -> sqlite3.Connection:
 
 
 def initialize_database(path: str | Path) -> None:
-    """Create or migrate the local database to the current schema."""
+    """Create or migrate the local database in one atomic schema transaction."""
     connection = _connect(path)
     try:
+        # Serialize concurrent first-run/migration attempts before reading user_version.
+        connection.execute("BEGIN IMMEDIATE")
         version = int(connection.execute("PRAGMA user_version").fetchone()[0])
         if version > SCHEMA_VERSION:
             raise DatabaseVersionError(
                 f"Database schema {version} is newer than supported {SCHEMA_VERSION}."
             )
+
         if version == 0:
-            with connection:
-                connection.executescript(
-                    """
-                    CREATE TABLE diagnostic_runs (
-                        run_id TEXT PRIMARY KEY,
-                        collector TEXT NOT NULL,
-                        status TEXT NOT NULL,
-                        interface TEXT,
-                        schema_version INTEGER NOT NULL,
-                        started_at TEXT NOT NULL,
-                        result_json TEXT NOT NULL
-                    );
-
-                    CREATE INDEX idx_diagnostic_runs_started_at
-                        ON diagnostic_runs(started_at DESC);
-
-                    CREATE TABLE findings (
-                        finding_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        run_id TEXT NOT NULL REFERENCES diagnostic_runs(run_id)
-                            ON DELETE CASCADE,
-                        code TEXT NOT NULL,
-                        severity TEXT NOT NULL,
-                        title TEXT NOT NULL,
-                        detail TEXT NOT NULL,
-                        recommendation TEXT NOT NULL
-                    );
-
-                    CREATE INDEX idx_findings_code ON findings(code);
-                    PRAGMA user_version = 1;
-                    """
+            connection.execute(
+                """
+                CREATE TABLE diagnostic_runs (
+                    run_id TEXT PRIMARY KEY,
+                    collector TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    interface TEXT,
+                    schema_version INTEGER NOT NULL,
+                    started_at TEXT NOT NULL,
+                    result_json TEXT NOT NULL
                 )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX idx_diagnostic_runs_started_at
+                ON diagnostic_runs(started_at DESC)
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE findings (
+                    finding_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT NOT NULL REFERENCES diagnostic_runs(run_id)
+                        ON DELETE CASCADE,
+                    code TEXT NOT NULL,
+                    severity TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    detail TEXT NOT NULL,
+                    recommendation TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute("CREATE INDEX idx_findings_code ON findings(code)")
+            connection.execute("PRAGMA user_version = 1")
             version = 1
+
         if version == 1:
-            with connection:
-                connection.execute(
-                    """
-                    CREATE TABLE inventory_baselines (
-                        baseline_id TEXT PRIMARY KEY,
-                        name TEXT NOT NULL UNIQUE,
-                        created_at TEXT NOT NULL,
-                        inventory_json TEXT NOT NULL
-                    )
-                    """
+            connection.execute(
+                """
+                CREATE TABLE inventory_baselines (
+                    baseline_id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL UNIQUE,
+                    created_at TEXT NOT NULL,
+                    inventory_json TEXT NOT NULL
                 )
-                connection.execute("PRAGMA user_version = 2")
+                """
+            )
+            connection.execute("PRAGMA user_version = 2")
+
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
     finally:
         connection.close()
 
