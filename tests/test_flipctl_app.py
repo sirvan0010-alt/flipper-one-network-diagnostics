@@ -118,8 +118,8 @@ def test_panel_menu_and_ethernet_flow_use_shared_core(monkeypatch):
     menu = namespace["main_menu"]
     assert menu.ran is True
     assert [item["label"] for item in menu.kwargs["items"]()] == [
-        "Interfaces", "Ethernet link", "Local Check", "Default route", "DNS config",
-        "History", "Safe Mode", "About"
+        "Interfaces", "Ethernet link", "Local Check", "Ping wired gateway",
+        "TCP gateway port", "Default route", "DNS config", "History", "Safe Mode", "About"
     ]
 
     menu.selected = 0
@@ -184,13 +184,13 @@ def test_route_and_dns_screens_use_read_only_collectors(monkeypatch):
     menu = namespace["main_menu"]
     detail = namespace["detail"]
 
-    menu.selected = 3
+    menu.selected = 5
     assert menu.handler(FakeKey.OK) is True
     route_rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "Gateway" and row.get("value") == "192.0.2.1"
                for row in route_rows)
 
-    menu.selected = 4
+    menu.selected = 6
     assert menu.handler(FakeKey.OK) is True
     dns_rows = detail.kwargs["rows"]()
     assert any(row.get("label") == "DNS 1" and row.get("value") == "192.0.2.53"
@@ -250,3 +250,127 @@ def test_local_check_panel_is_labelled_as_non_active(monkeypatch):
         "Local configuration needs attention." in row.get("value", "")
         for row in rows
     )
+
+
+def _wired_test_interfaces():
+    return [
+        {
+            "name": "end0",
+            "link_type": "ether",
+            "wireless": False,
+            "operstate": "UP",
+            "addresses": [{"family": "inet", "local": "192.0.2.10", "prefixlen": 24}],
+        }
+    ]
+
+
+def _wired_default_route():
+    return DiagnosticResult(
+        collector="linux.default_routes",
+        status="ok",
+        data={
+            "routes": [
+                {
+                    "family": "inet",
+                    "device": "end0",
+                    "gateway": "192.0.2.1",
+                    "metric": 100,
+                }
+            ]
+        },
+    )
+
+
+def test_ping_gateway_requires_on_device_confirmation(monkeypatch):
+    namespace = load_app(monkeypatch)
+    calls = []
+    monkeypatch.setitem(
+        namespace,
+        "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address",
+            status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    monkeypatch.setitem(namespace, "collect_default_routes", _wired_default_route)
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+
+    def fake_ping(target, **kwargs):
+        calls.append((target, kwargs))
+        return DiagnosticResult(
+            collector="linux.ping",
+            status="ok",
+            data={"target": target, "packets_transmitted": 3, "packets_received": 3},
+        )
+
+    monkeypatch.setitem(namespace, "run_ping", fake_ping)
+    namespace["main"]()
+    menu = namespace["main_menu"]
+    menu.selected = 3
+    assert menu.handler(FakeKey.OK) is True
+
+    confirm = namespace["confirm_detail"]
+    assert confirm.shown is True
+    assert calls == []
+    confirm_rows = confirm.kwargs["rows"]()
+    assert any(row.get("label") == "Target" and row.get("value") == "192.0.2.1"
+               for row in confirm_rows)
+
+    assert confirm.handler(FakeKey.RUN) is True
+    assert len(calls) == 1
+    target, kwargs = calls[0]
+    assert target == "192.0.2.1"
+    assert kwargs["safe_mode"] is False
+    assert kwargs["authorization"].targets == ("192.0.2.1",)
+    assert namespace["detail"].shown is True
+
+
+def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypatch):
+    namespace = load_app(monkeypatch)
+    calls = []
+    monkeypatch.setitem(
+        namespace,
+        "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address",
+            status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    monkeypatch.setitem(namespace, "collect_default_routes", _wired_default_route)
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+
+    def fake_tcp(target, port, **kwargs):
+        calls.append((target, port, kwargs))
+        return DiagnosticResult(
+            collector="linux.tcp_connect",
+            status="ok",
+            data={"target": target, "port": port, "connected": True},
+        )
+
+    monkeypatch.setitem(namespace, "run_tcp_connect", fake_tcp)
+    namespace["main"]()
+    menu = namespace["main_menu"]
+    menu.selected = 4
+    assert menu.handler(FakeKey.OK) is True
+
+    port_menu = namespace["tcp_port_menu"]
+    assert [item["label"] for item in port_menu.kwargs["items"]()] == [
+        "DNS", "HTTP", "HTTPS", "SSH"
+    ]
+    port_menu.selected = 2
+    assert port_menu.handler(FakeKey.OK) is True
+
+    confirm = namespace["confirm_detail"]
+    assert confirm.shown is True
+    assert calls == []
+    assert confirm.handler(FakeKey.RUN) is True
+
+    assert len(calls) == 1
+    target, port, kwargs = calls[0]
+    assert target == "192.0.2.1"
+    assert port == 443
+    assert kwargs["safe_mode"] is False
+    assert kwargs["authorization"].targets == ("192.0.2.1",)
+    assert kwargs["authorization"].ports == (443,)
