@@ -52,40 +52,57 @@ Packet capture should be an integration point: use upstream sniffer mode and sta
 
 ## 3. FlipCTL integration strategy and upstream status
 
-Official FlipCTL material (README at commit `3285ba6caf`, 2026-06-19) describes:
-- a backend for OS services and command-line tools;
-- app wrappers/plugins;
-- a frontend using HTML/JavaScript;
-- a headless WebKit renderer on the Flipper display;
-- optional Web UI, TUI, and desktop/browser control interfaces.
+There are two distinct upstream projects that must not be confused:
 
-The public `flipperdevices/flipctl` repository currently has a high-level architecture README and open proposals. The README explicitly asks the community to propose the architecture and plugin system. At the 2026-11-20 review, its default `dev` branch had no demonstrated stable, versioned third-party plugin contract. The linked Fake FLipCTL2 is described upstream as a rough prototype needing rework. Do not infer that a proposed plugin API or fake UI harness is production-ready.
+1. `flipperdevices/flipctl` is the earlier/high-level architecture proposal. Its README describes backend services, command wrappers and multiple frontends, but the repository still has open architecture/plugin proposals and no stable versioned third-party plugin API was found.
+2. `flipperdevices/flipctl-slint` is the current shipped panel UI/app framework referenced by the Linux image build scripts. Its documented app contract is already concrete enough for a first integration prototype.
+
+At commit `483ad588f5cd21e26eed416c949811821bb29a1f` (2026-11-19), `flipctl-slint/docs/apps.md` documents:
+- Python and JavaScript `.fap.py` / `.fap.js` scripts, discovered from a manifest comment;
+- a Python runtime app that provides the `py` runtime and the `flipctl` Python UI module;
+- `flipctl.Menu`, `Detail`, `Log`, buttons and physical-key handling;
+- AppImage bundles for compiled apps;
+- an app's own writable data directory and optional Debian package dependencies.
+
+The official `flipperone-linux-build-scripts` currently builds `flipctl` from `flipctl-slint`, installs the panel UI and remote-view assets, and deliberately ships no user apps by default: apps are installed from the catalogue or copied into `~/Apps`. This gives us a concrete on-device integration path without waiting for a generic plugin API.
+
+### Project decision
+
+- Keep the diagnostic core independent of FlipCTL internals and keep the CLI/JSON interface.
+- Build the first device UI as a documented Python `.fap.py` app using the upstream `flipctl` module.
+- Package the `flipper_diag` core beside the script in the app folder; do not duplicate diagnostic logic inside the UI.
+- The Flipper One display and physical keys are the primary frontend. PC/browser are optional.
+- Keep a thin UI layer: it calls core collectors, saves local results and renders concise summaries.
+- Re-check `flipctl-slint/docs/apps.md` and its app examples before changing the app contract. The `dev` branch is active development, not a semver-stable API.
+
+### Existing upstream overlap to avoid
+
+The current `flipctl-slint` tree already contains:
+- `apps/ping.fap.py`: a working example of a Python app and ICMP UI;
+- `apps/Test Tools/ethernet-tester.fap.py`: an experimental two-port cable/loopback test.
+
+The Ethernet tester source describes undocumented/reserved RTL8211F PHY registers, a privileged helper, raw test frames, link drops during tests and a kernel MII polling race. Treat it as an experimental upstream test utility, not a safe or released general-purpose feature. Do not copy its register poking or reproduce its cable-test implementation. Our first Ethernet scope stays with read-only link status and standard Linux interfaces.
 
 Sources:
 - https://github.com/flipperdevices/flipctl
 - https://github.com/flipperdevices/flipctl/pulls
-
-Decision:
-- Keep our diagnostic engine independent of FlipCTL internals.
-- Keep versioned JSON results and command-line entry points.
-- Prepare an adapter boundary, not a competing UI framework.
-- Once the upstream plugin schema/API is implemented and documented, write a thin FlipCTL wrapper that calls our CLI/core.
-- Re-check upstream before each integration change; do not target a fork or an unmerged proposal as if it were official.
-
-The upstream `flipperdevices/flipperone-testing` repository contains `fake-flipctl2`, which the FlipCTL README describes as a rough AI-made prototype needing rework. It is not proof of the production FlipCTL runtime or a faithful emulator of the final device/backend.
-
-Source:
-- https://github.com/flipperdevices/flipperone-testing/tree/dev/fake-flipctl2
+- https://github.com/flipperdevices/flipctl-slint
+- https://github.com/flipperdevices/flipctl-slint/blob/dev/docs/apps.md
+- https://github.com/flipperdevices/flipctl-slint/blob/dev/apps/ping.fap.py
+- https://github.com/flipperdevices/flipctl-slint/blob/dev/apps/Test%20Tools/ethernet-tester.fap.py
+- https://github.com/flipperdevices/flipperone-linux-build-scripts
 
 ## 4. Technology decision for the first implementation
 
-Use Python 3.10+ and the standard library for the portable diagnostic core. Add dependencies only when a concrete feature needs them.
+Use Python 3.10+ and the standard library for the portable diagnostic core and the first FlipCTL script app. The current Flipper OS rootfs package manifest includes Python packages such as `python3-pandas` and `python3-plotly`, which pull in the Python interpreter; the FlipCTL Python Runtime app separately declares `python3` as an app dependency. Exact Python version and runtime behavior still need target verification. Add dependencies only when a concrete feature needs them.
 
 Reasons:
 - Most early functions wrap Linux tools (ip, iw, ethtool, ping, tcpdump, iperf3, nmap, SNMP utilities).
 - Python is suitable for parsing command output, orchestration, JSON results, and fixtures.
 - The core remains independent of UI and hardware.
 - Performance-critical components can be moved to Rust or another language later if measurements justify it.
+
+The official rootfs manifest explicitly includes `iproute2`, `iperf3`, `iputils-ping`, `iw`, `tcpdump`, `traceroute`, `bluez`, `python3-pandas` and `python3-plotly`. It does not explicitly include `ethtool`, `nmap`, `lldpd`, `snmp` or `tshark`; our doctor command must detect optional tools and the app must degrade gracefully. This is based on the published manifest at build-scripts commit `836f7e7f8937cba3a25a37b8f4ad888a121783cc`, not a claim that every future image is identical.
 
 This is a project decision, not a claim that Python is the only or officially preferred Flipper One language. Final runtime compatibility, memory use, cold-start time, and battery impact must be measured on Flipper OS. Avoid a heavyweight always-on web stack on the handheld unless testing justifies it.
 
