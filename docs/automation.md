@@ -7,7 +7,7 @@ Stav: workflow soubory jsou přidány do vývojové větve. Python CI, CodeQL i 
 | Workflow | Spuštění | Účel |
 |---|---|---|
 | `Python checks` – x86_64 | push na `main`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | Ubuntu 24.04 x64; testy Python 3.10–3.13, Ruff, sestavení FlipCTL balíčku a uložení artefaktu |
-| `Python checks` – ARM64 | stejné události | Ubuntu 24.04 ARM64; nativní testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages |
+| `Python checks` – ARM64 | stejné události | Ubuntu 24.04 ARM64; nativní testy, sestavení univerzálního wheelu, čistá offline instalace, SQLite/CLI smoke test, sestavení FlipCTL app bundle a import všech zabalených modulů bez site-packages a spuštění zabaleného `.fap.py` se simulovaným FlipCTL API |
 | `Debian Trixie runtime` – ARM64 | stejné události | Debian Trixie ARM64 kontejner; kontrola `python3`, `sqlite3`, inicializace databáze a importu FlipCTL balíčku bez site-packages |
 | `CodeQL security analysis` | push na `main`/`pre-device-foundation`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | Statická analýza Pythonu a GitHub Actions, sada `security-extended` |
 | `Python security checks` | push na `main`/`pre-device-foundation`/validační větev, PR do `main`/`pre-device-foundation`, ručně, každé pondělí | `pip-audit`, Bandit pro nálezy vysoké závažnosti a kontrola kompilovatelnosti |
