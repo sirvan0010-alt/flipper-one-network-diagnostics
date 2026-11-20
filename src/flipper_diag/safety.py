@@ -37,11 +37,11 @@ def require_active_allowed(
         raise ActiveOperationBlocked("Explicit authorization is required.")
     if authorization.confirmed is not True:
         raise ActiveOperationBlocked("The operator has not confirmed this test.")
-    if not authorization.purpose.strip():
+    if not isinstance(authorization.purpose, str) or not authorization.purpose.strip():
         raise ActiveOperationBlocked("A non-empty test purpose must be specified.")
-    if not authorization.scope.strip():
+    if not isinstance(authorization.scope, str) or not authorization.scope.strip():
         raise ActiveOperationBlocked("An explicit IP network scope must be specified.")
-    if not authorization.targets:
+    if not isinstance(authorization.targets, tuple) or not authorization.targets:
         raise ActiveOperationBlocked("At least one explicit target is required.")
     if len(authorization.targets) > MAX_AUTHORIZED_TARGETS:
         raise ActiveOperationBlocked(
