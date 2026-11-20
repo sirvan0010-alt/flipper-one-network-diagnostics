@@ -1,6 +1,6 @@
 # Active test authorization
 
-Status: a single-target ICMP collector is implemented for development/CLI testing. It has not been run against a live target and is not exposed in the Flipper app menu.
+Status: single-target ICMP and single-port TCP collectors are implemented in CLI and are now exposed in the Flipper app behind a one-shot on-device confirmation screen. No live target has been tested.
 
 ## Safe Mode
 
@@ -45,5 +45,8 @@ The port must be included in the explicit authorization object. A successful han
 - ICMP echo only; it does not prove DNS, TCP service or Internet reachability.
 - Some hosts/firewalls intentionally block ICMP.
 - The parser supports the tested iputils and BusyBox summary formats; target output must be verified.
-- The Flipper app does not yet expose active tests. A separate on-device confirmation screen and audit record are required before that changes.
+- The Flipper app uses only the detected wired default gateway and a preset port list (53, 80, 443, 22), because the reviewed Python FlipCTL API does not expose free-form text input.
+- Each action requires the user to open a confirmation screen and press the explicit Confirm soft key. Cancel sends nothing. There is no global Safe Mode disable.
+- Link-local IPv6 gateways are skipped until the active collectors support an explicit interface/scope ID.
+- The on-device flow is unit-tested with mocked sockets/subprocesses, but physical key/display behavior is not yet hardware-validated.
 - No live ping was performed during development; tests mock subprocess execution.
