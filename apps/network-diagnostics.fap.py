@@ -85,7 +85,7 @@ def refresh_interfaces():
 def ethernet_interfaces():
     return [
         item for item in state["interfaces"]
-        if item.get("link_type") == "ether"
+        if item.get("link_type") == "ether" and item.get("wireless") is False
     ]
 
 
