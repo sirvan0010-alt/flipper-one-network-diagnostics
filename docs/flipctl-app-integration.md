@@ -43,6 +43,17 @@ A future release may be offered through the FlipCTL app catalogue. Catalogue sub
 
 The published rootfs manifest includes `iproute2`, but does not explicitly include `ethtool`. The app therefore reports the missing tool instead of assuming it exists. Do not add privileged PHY register access or experimental cable-test code.
 
+## ARM64 software validation
+
+The CI workflow includes a native `ubuntu-24.04-arm` job. It:
+- verifies the runner and Python process are `aarch64`;
+- runs the unit test suite and Ruff on ARM64;
+- builds and checks a universal `py3-none-any` wheel;
+- installs the wheel into a clean virtual environment with package-index access disabled;
+- imports the core, checks SQLite availability, runs the read-only `doctor --json` command and assembles the FlipCTL app directory.
+
+This validates the portable Python package on generic Linux ARM64. It does **not** validate the Flipper One root filesystem, the installed FlipCTL Python Runtime, app discovery, device permissions, UI input or hardware-specific interfaces.
+
 ## Limitations and validation
 
 - The app has been syntax-checked and its package builder is covered by CI; it has not yet been launched on Flipper One hardware.
