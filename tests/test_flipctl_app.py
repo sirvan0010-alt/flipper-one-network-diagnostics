@@ -327,6 +327,31 @@ def test_ping_gateway_requires_on_device_confirmation(monkeypatch):
     assert namespace["detail"].shown is True
 
 
+def test_cancelled_ping_confirmation_sends_no_packets(monkeypatch):
+    namespace = load_app(monkeypatch)
+    calls = []
+    monkeypatch.setitem(
+        namespace, "collect_ip_interfaces",
+        lambda: DiagnosticResult(
+            collector="linux.ip_address", status="ok",
+            data={"interfaces": _wired_test_interfaces(), "count": 1},
+        ),
+    )
+    monkeypatch.setitem(namespace, "collect_default_routes", _wired_default_route)
+    monkeypatch.setitem(namespace, "save_result", lambda *args: "12345678-abcd")
+    monkeypatch.setitem(
+        namespace, "run_ping",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+    namespace["main"]()
+    namespace["main_menu"].selected = 4
+    namespace["main_menu"].handler(FakeKey.OK)
+
+    assert namespace["confirm_detail"].handler(FakeKey.ESCAPE) is True
+    assert calls == []
+    assert namespace["pending_active_action"] is None
+
+
 def test_tcp_gateway_port_requires_confirmation_and_authorizes_one_port(monkeypatch):
     namespace = load_app(monkeypatch)
     calls = []
