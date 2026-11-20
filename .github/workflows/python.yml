@@ -83,3 +83,14 @@ jobs:
           PYTHONPATH: ${{ runner.temp }}/Network Diagnostics
         run: |
           "$RUNNER_TEMP/clean-venv/bin/python" -S -c "import importlib, pkgutil, flipper_diag; [importlib.import_module(m.name) for m in pkgutil.iter_modules(flipper_diag.__path__, 'flipper_diag.')]; print('Bundled core imports:', flipper_diag.__version__)"
+
+  docs-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Validate local Markdown links, images and anchors
+        run: python scripts/validate_docs.py
