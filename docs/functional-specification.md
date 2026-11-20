@@ -5,7 +5,7 @@
 **Reviewed:** 2026-11-20  
 **Branch:** arm64-runtime-validation
 
-This document turns backlog F-01–F-52 into testable product requirements and adds optional Proxmark5 and read-only CAN extensions. It supplements [AGENTS.md](../AGENTS.md), the [feature matrix](feature-matrix.md), [roadmap](roadmap.md), [architecture](architecture.md), [verification register](verification.md), and [active-test policy](active-tests.md).
+This document turns backlog F-01–F-57 into testable product requirements and defines optional Proxmark5 and WiCAN PRO integrations. It supplements [AGENTS.md](../AGENTS.md), the [feature matrix](feature-matrix.md), [roadmap](roadmap.md), [architecture](architecture.md), [verification register](verification.md), and [active-test policy](active-tests.md).
 
 ## 1. Product goal
 
@@ -47,7 +47,7 @@ A parser or mock test does not make a hardware-dependent feature complete.
 - **Storage:** versioned SQLite schema, migrations, inventory, profiles, jobs, observations, findings, baselines and history.
 - **Reports/export:** offline HTML/CSV first, optional PDF; redact secrets and retain evidence provenance.
 - **Linux/OS integration:** interface/route/DNS inventory, ethtool, iproute2, iw, BlueZ, process supervision and optional tools. Detect runtime capabilities rather than assuming packages.
-- **Accessory adapters:** Proxmark5 USB/Wi-Fi/BLE and, separately, experimental read-only automotive CAN.
+- **Accessory adapters:** Proxmark5 USB/Wi-Fi/BLE and a separate WiCAN PRO automotive CAN adapter. WiCAN is the primary planned CAN accessory; its integration must reuse the existing AutoDiag-WiCAN projects rather than duplicate their automotive runtime.
 
 Core remains importable/testable on ordinary Linux without FlipCTL, Proxmark5, Wi-Fi hardware or a live network.
 
@@ -278,9 +278,9 @@ Existing roadmap milestone definitions remain authoritative; this table clarifie
 | M4 – Wired MVP | Discovery, profiles, Ping/TCP, capture, iPerf and reports | F-01/F-02/F-04–F-11/F-13/F-15/F-17/F-36/F-39 target-tested. |
 | M5 – Wi-Fi/Bluetooth | Wi-Fi tests, channel map, roaming, Locate, capture and BLE | F-20–F-32 only to verified radio/driver/regulatory limits; F-43. |
 | M6 – Security/dashboard | Problem engine, Nmap, monitoring, reports and dashboard | F-03/F-12/F-14/F-26/F-33–F-42 with separate active policy. |
-| M7 – Optional | Reflector/LANBERT, Proxmark5 and custom hardware | F-18/F-19/F-45–F-52 independent experiments; never block MVP. |
+| M7 – Optional | Reflector/LANBERT, Proxmark5, WiCAN PRO and custom hardware | F-18/F-19/F-45–F-57 independent experiments; WiCAN PRO is the first planned CAN adapter; never block MVP. |
 
-Suggested implementation order: core policy/data model → passive wired evidence → target hardware validation → bounded wired active tests → reporting/topology → Wi-Fi/BLE → security/OT → accessories.
+Suggested implementation order: core policy/data model → passive wired evidence → target hardware validation → bounded wired active tests → reporting/topology → Wi-Fi/BLE → security/OT → accessories. For WiCAN PRO, implement the transport-neutral read-only adapter and evidence-contract interoperability before any automotive-specific UI.
 
 ## 13. Current implementation and verification baseline
 
